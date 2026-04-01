@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PDF Printer Saver</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Caveat:wght@400;600&display=swap');
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -465,6 +465,176 @@
       transform: translateX(-50%) translateY(5px);
     }
     #action-popup.error { --popup-bg: var(--red-700); }
+    /* ── Rotation label ── */
+    .rotation-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--blue-700);
+      background: var(--blue-50);
+      border: 1px solid var(--blue-200);
+      border-radius: var(--radius-sm);
+      padding: 2px 7px;
+      display: none;
+    }
+    .rotation-label.visible { display: inline-block; }
+
+    /* ── Sign button ── */
+    .action-btn.sign-btn {
+      background: transparent;
+      color: var(--gray-600);
+      border-color: var(--gray-300);
+      font-weight: 500;
+    }
+    .action-btn.sign-btn:hover:not(:disabled) {
+      background: var(--gray-100);
+      color: var(--gray-900);
+      border-color: var(--gray-400);
+    }
+    .action-btn.sign-btn.active {
+      background: var(--blue-50);
+      color: var(--blue-700);
+      border-color: var(--blue-300);
+      font-weight: 600;
+    }
+    .action-btn.sign-btn:disabled { opacity: 0.38; }
+
+    /* ── Signature modal ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(17,24,39,0.45);
+      z-index: 300;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(2px);
+    }
+    .modal-overlay.hidden { display: none; }
+
+    .modal-box {
+      background: var(--surface);
+      border-radius: var(--radius-xl);
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15), 0 8px 10px -6px rgba(0,0,0,0.1);
+      width: 420px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .modal-header {
+      padding: 18px 24px 14px;
+      border-bottom: 1px solid var(--gray-200);
+    }
+    .modal-header h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--gray-900);
+      letter-spacing: -0.02em;
+    }
+    .modal-header p {
+      font-size: 13px;
+      color: var(--gray-500);
+      margin-top: 3px;
+    }
+
+    .modal-body {
+      padding: 20px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .modal-body label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-700);
+    }
+    .modal-body input[type="text"] {
+      width: 100%;
+      padding: 9px 11px;
+      border: 1px solid var(--gray-300);
+      border-radius: var(--radius);
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--gray-900);
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .modal-body input[type="text"]:focus {
+      border-color: var(--blue-600);
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+    }
+
+    /* Signature preview box */
+    #sign-preview-box {
+      border: 1px solid #b0b0cc;
+      border-radius: 6px;
+      background: #f7f7fd;
+      padding: 10px 12px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    #sign-preview-name {
+      font-family: 'Caveat', 'Dancing Script', cursive;
+      font-size: 26px;
+      color: #151878;
+      line-height: 1.1;
+      min-height: 32px;
+    }
+    .sign-preview-rule {
+      border: none;
+      border-top: 1px solid #c0c0d8;
+      margin: 2px 0;
+    }
+    #sign-preview-details {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+    #sign-preview-details span {
+      font-size: 11px;
+      color: #666;
+      font-family: monospace;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 24px 18px;
+      border-top: 1px solid var(--gray-200);
+      background: var(--gray-50);
+    }
+
+    .btn-primary {
+      min-height: 38px; padding: 0 20px;
+      background: var(--primary); color: #fff;
+      border: 1px solid transparent; border-radius: var(--radius);
+      font-family: inherit; font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: background 0.12s;
+    }
+    .btn-primary:hover { background: var(--primary-hover); }
+
+    .btn-secondary {
+      min-height: 38px; padding: 0 16px;
+      background: var(--surface); color: var(--gray-700);
+      border: 1px solid var(--gray-300); border-radius: var(--radius);
+      font-family: inherit; font-size: 14px; font-weight: 500;
+      cursor: pointer; transition: background 0.12s;
+    }
+    .btn-secondary:hover { background: var(--gray-100); }
+
+    .btn-danger {
+      min-height: 38px; padding: 0 16px;
+      background: var(--surface); color: #dc2626;
+      border: 1px solid #fca5a5; border-radius: var(--radius);
+      font-family: inherit; font-size: 14px; font-weight: 500;
+      cursor: pointer; margin-right: auto; transition: background 0.12s;
+    }
+    .btn-danger:hover { background: #fee2e2; border-color: #dc2626; }
+    .btn-danger.hidden { display: none; }
+
     #action-popup::before {
       content: '';
       position: absolute;
@@ -492,6 +662,9 @@
       <span id="zoom-level">100%</span>
       <button id="btn-zoom-in"  class="toolbar-btn" title="Zoom in" disabled>+</button>
       <button id="btn-zoom-fit" class="toolbar-btn" title="Fit to window" disabled>Fit</button>
+      <div class="sep"></div>
+      <button id="btn-rotate" class="toolbar-btn" title="Rotate 90° clockwise" disabled>↻ Rotate</button>
+      <span id="rotation-label" class="rotation-label"></span>
     </div>
 
     <!-- Action toolbar -->
@@ -504,6 +677,7 @@
           <button id="btn-email" class="action-btn email-btn" disabled>✉ Email ▾</button>
           <div id="email-dropdown" class="hidden"></div>
         </div>
+        <button id="btn-sign"     class="action-btn sign-btn"     disabled>✍ Sign</button>
         <button id="btn-print"    class="action-btn print-btn"    disabled>🖨 Print</button>
         <button id="btn-settings" class="action-btn settings-btn">⚙ Settings</button>
       </div>
@@ -527,6 +701,36 @@
       <span id="status-msg" class="hidden"></span>
     </div>
 
+  </div>
+
+  <!-- Signature modal -->
+  <div id="sign-overlay" class="modal-overlay hidden">
+    <div id="sign-box" class="modal-box">
+      <div class="modal-header">
+        <div>
+          <h3>Add Signature</h3>
+          <p>Embedded in the bottom-right corner of the last page when saving</p>
+        </div>
+      </div>
+      <div class="modal-body">
+        <label for="sign-name-input">Your name</label>
+        <input id="sign-name-input" type="text" placeholder="Full name" autocomplete="off" />
+        <div id="sign-preview-box">
+          <div id="sign-preview-name">Your Name</div>
+          <hr class="sign-preview-rule" />
+          <div id="sign-preview-details">
+            <span id="sign-preview-date"></span>
+            <span id="sign-preview-ip"></span>
+            <span id="sign-preview-device"></span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="sign-clear" class="btn-danger hidden">Remove Signature</button>
+        <button id="sign-cancel" class="btn-secondary">Cancel</button>
+        <button id="sign-confirm" class="btn-primary">Apply Signature</button>
+      </div>
+    </div>
   </div>
 
   <!-- Toast notification (errors / non-button events) -->

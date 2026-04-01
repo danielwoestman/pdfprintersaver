@@ -19,7 +19,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getPrinters: () => ipcRenderer.invoke('printers:get'),
   emailPDF: (toAddress, filePath, note) => ipcRenderer.invoke('email:open', { toAddress, filePath, note }),
 
+  // PDF processing (rotation + signature)
+  processPdf: (src, destFolder, rotation, signature) =>
+    ipcRenderer.invoke('pdf:process', { src, destFolder, rotation, signature }),
+  getSystemInfo: () => ipcRenderer.invoke('system:info'),
+
   // Events from main process → renderer
   onMenuOpenFile: (cb) => ipcRenderer.on('menu:openFile', cb),
   onSettingsUpdated: (cb) => ipcRenderer.on('settings:updated', cb),
+  onOpenFilePath: (cb) => ipcRenderer.on('file:open-path', (_, filePath) => cb(filePath)),
 });

@@ -8,12 +8,15 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
-let pdfDoc       = null;
-let currentPage  = 1;
-let totalPages   = 0;
-let currentPath  = null;   // absolute path of the open file
-let zoom         = 1.0;
-let settings     = { buttons: [] };
+let pdfDoc           = null;
+let currentPage      = 1;
+let totalPages       = 0;
+let currentPath      = null;   // absolute path of the open file
+let zoom             = 1.0;
+let displayRotation  = 0;      // additional rotation applied by user (0/90/180/270)
+let pendingSignature = null;   // { name, date, ip, device } or null
+let systemInfo       = null;   // { ip, hostname, username, platform }
+let settings         = { buttons: [] };
 
 // ── DOM refs ──────────────────────────────────────────────────────────────────
 
@@ -31,14 +34,46 @@ const actionPopup  = document.getElementById('action-popup');
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 async function init() {
-  settings = await window.electronAPI.getSettings();
+  [settings, systemInfo] = await Promise.all([
+    window.electronAPI.getSettings(),
+    window.electronAPI.getSystemInfo(),
+  ]);
   renderActionButtons();
 
   window.electronAPI.onMenuOpenFile(() => openFile());
+  window.electronAPI.onOpenFilePath((filePath) => loadPdfFromPath(filePath));
   window.electronAPI.onSettingsUpdated(async () => {
     settings = await window.electronAPI.getSettings();
     renderActionButtons();
     syncActionButtonState();
+  });
+
+  // Rotate button
+  document.getElementById('btn-rotate').addEventListener('click', () => {
+    displayRotation = (displayRotation + 90) % 360;
+    const label = document.getElementById('rotation-label');
+    if (displayRotation === 0) {
+      label.textContent = '';
+      label.classList.remove('visible');
+    } else {
+      label.textContent = `${displayRotation}°`;
+      label.classList.add('visible');
+    }
+    renderPage(currentPage);
+  });
+
+  // Sign button
+  document.getElementById('btn-sign').addEventListener('click', openSignModal);
+  document.getElementById('sign-cancel').addEventListener('click', closeSignModal);
+  document.getElementById('sign-confirm').addEventListener('click', applySignature);
+  document.getElementById('sign-clear').addEventListener('click', clearSignature);
+  document.getElementById('sign-overlay').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeSignModal();
+  });
+
+  // Live preview as user types
+  document.getElementById('sign-name-input').addEventListener('input', (e) => {
+    document.getElementById('sign-preview-name').textContent = e.target.value || 'Your Name';
   });
 }
 
@@ -69,8 +104,10 @@ function syncActionButtonState() {
     el.disabled = !configured || !currentPath;
   });
   const hasEmailTemplate = (settings.emailTemplates || []).some(t => t.label && t.toAddress);
-  document.getElementById('btn-email').disabled = !currentPath || !hasEmailTemplate;
-  document.getElementById('btn-print').disabled = !currentPath;
+  document.getElementById('btn-email').disabled   = !currentPath || !hasEmailTemplate;
+  document.getElementById('btn-print').disabled   = !currentPath;
+  document.getElementById('btn-rotate').disabled  = !currentPath;
+  document.getElementById('btn-sign').disabled    = !currentPath;
 }
 
 async function handleActionButton(index, buttonEl) {
@@ -78,7 +115,15 @@ async function handleActionButton(index, buttonEl) {
   const btn = settings.buttons[index];
   if (!btn?.label || !btn?.folder) return;
 
-  const result = await window.electronAPI.copyFile(currentPath, btn.folder);
+  let result;
+  if (displayRotation !== 0 || pendingSignature) {
+    result = await window.electronAPI.processPdf(
+      currentPath, btn.folder, displayRotation, pendingSignature
+    );
+  } else {
+    result = await window.electronAPI.copyFile(currentPath, btn.folder);
+  }
+
   if (result.success) {
     showButtonPopup(buttonEl, `✓ Saved to "${btn.label}"`);
     showStatus(`Copied → ${result.dest}`);
@@ -91,8 +136,10 @@ async function handleActionButton(index, buttonEl) {
 
 async function openFile() {
   const filePath = await window.electronAPI.openFile();
-  if (!filePath) return;
+  if (filePath) await loadPdfFromPath(filePath);
+}
 
+async function loadPdfFromPath(filePath) {
   const read = await window.electronAPI.readFile(filePath);
   if (!read.success) {
     showToast(`✗ Cannot read file: ${read.error}`, 'error');
@@ -102,11 +149,19 @@ async function openFile() {
   try {
     // pdfjs accepts a Uint8Array directly
     const data = read.data instanceof Uint8Array ? read.data : new Uint8Array(read.data);
-    pdfDoc      = await pdfjsLib.getDocument({ data }).promise;
-    totalPages  = pdfDoc.numPages;
-    currentPage = 1;
-    currentPath = filePath;
-    zoom        = 1.0;
+    pdfDoc           = await pdfjsLib.getDocument({ data }).promise;
+    totalPages       = pdfDoc.numPages;
+    currentPage      = 1;
+    currentPath      = filePath;
+    zoom             = 1.0;
+    displayRotation  = 0;
+    pendingSignature = null;
+
+    // Reset rotation label and sign button
+    const rotLabel = document.getElementById('rotation-label');
+    rotLabel.textContent = '';
+    rotLabel.classList.remove('visible');
+    document.getElementById('btn-sign').classList.remove('active');
 
     emptyState.style.display = 'none';
     canvas.style.display = 'block';
@@ -126,7 +181,7 @@ async function openFile() {
 async function renderPage(pageNum) {
   const page     = await pdfDoc.getPage(pageNum);
   const dpr      = window.devicePixelRatio || 1;
-  const viewport = page.getViewport({ scale: zoom * dpr });
+  const viewport = page.getViewport({ scale: zoom * dpr, rotation: displayRotation });
 
   canvas.width  = viewport.width;
   canvas.height = viewport.height;
@@ -309,6 +364,59 @@ function showStatus(message) {
   statusTimer = setTimeout(() => {
     statusMsg.classList.add('hidden');
   }, 4000);
+}
+
+// ── Signature modal ───────────────────────────────────────────────────────────
+
+function openSignModal() {
+  const overlay  = document.getElementById('sign-overlay');
+  const nameInput = document.getElementById('sign-name-input');
+  const clearBtn  = document.getElementById('sign-clear');
+
+  // Pre-fill if already signed
+  nameInput.value = pendingSignature?.name || '';
+  document.getElementById('sign-preview-name').textContent = pendingSignature?.name || 'Your Name';
+  clearBtn.classList.toggle('hidden', !pendingSignature);
+
+  // Fill preview details from system info
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  document.getElementById('sign-preview-date').textContent   = `Date:    ${dateStr}`;
+  document.getElementById('sign-preview-ip').textContent     = `IP:      ${systemInfo?.ip || '—'}`;
+  document.getElementById('sign-preview-device').textContent =
+    `Device:  ${systemInfo?.hostname || '—'} · ${systemInfo?.username || '—'} · ${systemInfo?.platform || '—'}`;
+
+  overlay.classList.remove('hidden');
+  nameInput.focus();
+}
+
+function closeSignModal() {
+  document.getElementById('sign-overlay').classList.add('hidden');
+}
+
+function applySignature() {
+  const name = document.getElementById('sign-name-input').value.trim();
+  if (!name) {
+    document.getElementById('sign-name-input').focus();
+    return;
+  }
+  const now = new Date();
+  pendingSignature = {
+    name,
+    date: now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+    ip:   systemInfo?.ip || '—',
+    device: `${systemInfo?.hostname || '—'} · ${systemInfo?.username || '—'} · ${systemInfo?.platform || '—'}`,
+  };
+  document.getElementById('btn-sign').classList.add('active');
+  document.getElementById('btn-sign').textContent = `✍ Signed`;
+  closeSignModal();
+}
+
+function clearSignature() {
+  pendingSignature = null;
+  document.getElementById('btn-sign').classList.remove('active');
+  document.getElementById('btn-sign').textContent = '✍ Sign';
+  closeSignModal();
 }
 
 // ── Boot ──────────────────────────────────────────────────────────────────────

@@ -1,7 +1,10 @@
 const { app, BrowserWindow, ipcMain, dialog, Menu, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 const { execFile } = require('child_process');
+const { PDFDocument, degrees, rgb, StandardFonts } = require('pdf-lib');
+const fontkit = require('@pdf-lib/fontkit');
 
 if (process.platform === 'linux') {
   app.commandLine.appendSwitch('no-sandbox');          // SUID sandbox not set up in dev
@@ -272,14 +275,130 @@ try {
   });
 });
 
+ipcMain.handle('system:info', () => {
+  const interfaces = os.networkInterfaces();
+  let ip = '—';
+  outer: for (const iface of Object.values(interfaces)) {
+    for (const addr of iface) {
+      if (addr.family === 'IPv4' && !addr.internal) { ip = addr.address; break outer; }
+    }
+  }
+  return {
+    ip,
+    hostname: os.hostname(),
+    username: os.userInfo().username,
+    platform: `${os.platform()} ${os.release()}`,
+  };
+});
+
+ipcMain.handle('pdf:process', async (event, { src, destFolder, rotation, signature }) => {
+  try {
+    const bytes = fs.readFileSync(src);
+    const doc = await PDFDocument.load(bytes);
+    doc.registerFontkit(fontkit);
+    const pages = doc.getPages();
+
+    if (rotation) {
+      for (const page of pages) {
+        const cur = page.getRotation().angle;
+        page.setRotation(degrees((cur + rotation) % 360));
+      }
+    }
+
+    if (signature) {
+      const fontBytes = fs.readFileSync(path.join(__dirname, 'assets', 'Caveat-Regular.ttf'));
+      const caveat = await doc.embedFont(fontBytes);
+      const helv = await doc.embedFont(StandardFonts.Helvetica);
+
+      const lastPage = pages[pages.length - 1];
+      const { width, height } = lastPage.getSize();
+
+      const bW = 240, bH = 88, margin = 20;
+      const bX = width - bW - margin;
+      const bY = margin;
+
+      lastPage.drawRectangle({
+        x: bX, y: bY, width: bW, height: bH,
+        color: rgb(0.97, 0.97, 1),
+        borderColor: rgb(0.55, 0.55, 0.7),
+        borderWidth: 0.6,
+        opacity: 0.95,
+      });
+
+      lastPage.drawText(signature.name, {
+        x: bX + 10, y: bY + bH - 32,
+        font: caveat, size: 22,
+        color: rgb(0.08, 0.1, 0.45),
+      });
+
+      lastPage.drawLine({
+        start: { x: bX + 10, y: bY + bH - 38 },
+        end:   { x: bX + bW - 10, y: bY + bH - 38 },
+        thickness: 0.4, color: rgb(0.7, 0.7, 0.8),
+      });
+
+      [
+        `Date:    ${signature.date}`,
+        `IP:      ${signature.ip}`,
+        `Device:  ${signature.device}`,
+      ].forEach((line, i) => {
+        lastPage.drawText(line, {
+          x: bX + 10, y: bY + bH - 52 - i * 13,
+          font: helv, size: 8,
+          color: rgb(0.35, 0.35, 0.45),
+        });
+      });
+    }
+
+    const modified = await doc.save();
+    if (!fs.existsSync(destFolder)) fs.mkdirSync(destFolder, { recursive: true });
+    const dest = findAvailablePath(destFolder, path.basename(src));
+    fs.writeFileSync(dest, modified);
+    return { success: true, dest };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
 // ── App lifecycle ─────────────────────────────────────────────────────────────
 
-app.whenReady().then(createMainWindow);
+function getPdfArgPath(argv) {
+  // Skip electron/node runtime flags and the app entry point
+  return argv.slice(1).find(a => !a.startsWith('-') && a.toLowerCase().endsWith('.pdf')) || null;
+}
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
-});
+// Single-instance lock — when the user double-clicks a second PDF while the
+// app is already open, forward the path to the existing window instead of
+// opening a second instance.
+const gotLock = app.requestSingleInstanceLock();
+if (!gotLock) {
+  app.quit();
+} else {
+  app.on('second-instance', (event, argv) => {
+    const filePath = getPdfArgPath(argv);
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+      if (filePath) mainWindow.webContents.send('file:open-path', filePath);
+    }
+  });
 
-app.on('activate', () => {
-  if (!mainWindow) createMainWindow();
-});
+  app.whenReady().then(() => {
+    createMainWindow();
+
+    const filePath = getPdfArgPath(process.argv);
+    if (filePath) {
+      mainWindow.webContents.on('did-finish-load', () => {
+        mainWindow.webContents.send('file:open-path', filePath);
+      });
+    }
+  });
+
+  app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') app.quit();
+  });
+
+  app.on('activate', () => {
+    if (!mainWindow) createMainWindow();
+  });
+}
