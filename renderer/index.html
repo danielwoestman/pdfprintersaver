@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PDF Printer Saver</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --toolbar-bg: #2b2d42;
+      --toolbar-border: #1a1b2e;
+      --toolbar-text: #edf2f4;
+      --btn-bg: #3a3d5c;
+      --btn-hover: #4a4f76;
+      --btn-active: #5a5f86;
+      --btn-text: #edf2f4;
+      --action-bg: #2563eb;
+      --action-hover: #1d4ed8;
+      --action-disabled-bg: #4b5563;
+      --action-disabled-text: #9ca3af;
+      --print-bg: #7c3aed;
+      --print-hover: #6d28d9;
+      --settings-bg: #374151;
+      --settings-hover: #4b5563;
+      --pdf-bg: #525659;
+      --status-bg: #1e2033;
+      --status-text: #9ca3af;
+      --status-highlight: #edf2f4;
+      --toast-success: #059669;
+      --toast-error: #dc2626;
+      --separator: #3d4060;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 13px;
+      background: var(--pdf-bg);
+      color: var(--toolbar-text);
+      overflow: hidden;
+    }
+
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    /* ── Nav toolbar ── */
+    #nav-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 10px;
+      background: var(--toolbar-bg);
+      border-bottom: 1px solid var(--toolbar-border);
+      flex-shrink: 0;
+      -webkit-app-region: drag;
+    }
+
+    #nav-toolbar > * { -webkit-app-region: no-drag; }
+
+    /* ── Action toolbar ── */
+    #action-toolbar {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 4px;
+      padding: 6px 10px;
+      background: #232538;
+      border-bottom: 1px solid var(--toolbar-border);
+      flex-shrink: 0;
+    }
+
+    #action-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      flex: 1;
+    }
+
+    #fixed-buttons {
+      display: flex;
+      gap: 4px;
+      margin-left: auto;
+    }
+
+    /* ── Buttons ── */
+    .toolbar-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px 10px;
+      background: var(--btn-bg);
+      color: var(--btn-text);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      font-family: inherit;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+    .toolbar-btn:hover:not(:disabled) { background: var(--btn-hover); }
+    .toolbar-btn:active:not(:disabled) { background: var(--btn-active); }
+    .toolbar-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .toolbar-btn.primary {
+      background: var(--action-bg);
+      border-color: transparent;
+      font-weight: 500;
+    }
+    .toolbar-btn.primary:hover:not(:disabled) { background: var(--action-hover); }
+
+    .action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px 12px;
+      background: var(--action-bg);
+      color: #fff;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      font-family: inherit;
+      white-space: nowrap;
+      min-width: 70px;
+      transition: background 0.15s, opacity 0.15s;
+    }
+    .action-btn:hover:not(:disabled) { background: var(--action-hover); }
+    .action-btn:active:not(:disabled) { filter: brightness(0.9); }
+    .action-btn:disabled {
+      background: var(--action-disabled-bg);
+      color: var(--action-disabled-text);
+      cursor: not-allowed;
+    }
+    .action-btn.unconfigured {
+      background: var(--action-disabled-bg);
+      color: var(--action-disabled-text);
+      font-weight: 400;
+      font-style: italic;
+    }
+    .action-btn.print-btn {
+      background: var(--print-bg);
+    }
+    .action-btn.print-btn:hover:not(:disabled) { background: var(--print-hover); }
+    .action-btn.settings-btn {
+      background: var(--settings-bg);
+    }
+    .action-btn.settings-btn:hover { background: var(--settings-hover); }
+
+    /* ── Separator ── */
+    .sep {
+      width: 1px;
+      height: 20px;
+      background: var(--separator);
+      margin: 0 4px;
+      flex-shrink: 0;
+    }
+
+    /* ── Page info ── */
+    #page-info {
+      min-width: 72px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--toolbar-text);
+      opacity: 0.8;
+    }
+
+    #zoom-level {
+      min-width: 44px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--toolbar-text);
+      opacity: 0.8;
+    }
+
+    /* ── PDF area ── */
+    #pdf-container {
+      flex: 1;
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: var(--pdf-bg);
+      padding: 24px 24px;
+    }
+
+    #pdf-empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      color: rgba(255,255,255,0.4);
+      user-select: none;
+      pointer-events: none;
+    }
+
+    #pdf-empty-state .icon {
+      font-size: 64px;
+      opacity: 0.3;
+    }
+
+    #pdf-empty-state h2 {
+      font-size: 18px;
+      font-weight: 500;
+    }
+
+    #pdf-empty-state p {
+      font-size: 13px;
+      opacity: 0.7;
+    }
+
+    #pdf-canvas {
+      display: none;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+      border-radius: 2px;
+      background: white;
+    }
+
+    /* ── Status bar ── */
+    #status-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      height: 26px;
+      background: var(--status-bg);
+      border-top: 1px solid var(--toolbar-border);
+      flex-shrink: 0;
+      font-size: 11px;
+      color: var(--status-text);
+    }
+
+    #status-file { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #status-msg { color: var(--status-highlight); transition: opacity 0.3s; }
+    #status-msg.hidden { opacity: 0; }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed;
+      bottom: 44px;
+      right: 20px;
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      z-index: 9999;
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+    #toast.hidden { opacity: 0; transform: translateY(8px); }
+    #toast.success { background: var(--toast-success); color: #fff; opacity: 1; transform: translateY(0); }
+    #toast.error   { background: var(--toast-error);   color: #fff; opacity: 1; transform: translateY(0); }
+  </style>
+</head>
+<body>
+  <div id="app">
+
+    <!-- Navigation toolbar -->
+    <div id="nav-toolbar">
+      <button id="btn-open" class="toolbar-btn primary">📂 Open PDF</button>
+      <div class="sep"></div>
+      <button id="btn-prev"  class="toolbar-btn" title="Previous page (←)" disabled>◀</button>
+      <span id="page-info">— / —</span>
+      <button id="btn-next"  class="toolbar-btn" title="Next page (→)" disabled>▶</button>
+      <div class="sep"></div>
+      <button id="btn-zoom-out" class="toolbar-btn" title="Zoom out" disabled>−</button>
+      <span id="zoom-level">100%</span>
+      <button id="btn-zoom-in"  class="toolbar-btn" title="Zoom in" disabled>+</button>
+      <button id="btn-zoom-fit" class="toolbar-btn" title="Fit to window" disabled>Fit</button>
+    </div>
+
+    <!-- Action toolbar -->
+    <div id="action-toolbar">
+      <div id="action-buttons"><!-- populated by renderer.js --></div>
+      <div id="fixed-buttons">
+        <button id="btn-print"    class="action-btn print-btn"    disabled>🖨 Print</button>
+        <button id="btn-settings" class="action-btn settings-btn">⚙ Settings</button>
+      </div>
+    </div>
+
+    <!-- PDF display area -->
+    <div id="pdf-container">
+      <div id="pdf-empty-state">
+        <div class="icon">📄</div>
+        <h2>No PDF open</h2>
+        <p>Use <strong>File › Open PDF…</strong> or click <strong>Open PDF</strong> above</p>
+      </div>
+      <canvas id="pdf-canvas"></canvas>
+    </div>
+
+    <!-- Status bar -->
+    <div id="status-bar">
+      <span id="status-file">No file open</span>
+      <span id="status-msg" class="hidden"></span>
+    </div>
+
+  </div>
+
+  <!-- Toast notification -->
+  <div id="toast" class="hidden"></div>
+
+  <script type="module" src="renderer.js"></script>
+</body>
+</html>

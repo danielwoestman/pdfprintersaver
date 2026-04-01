@@ -1,0 +1,57 @@
+{
+  "name": "pdf-printer-saver",
+  "version": "1.0.0",
+  "description": "PDF viewer with configurable quick-save action buttons for staff document routing",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux"
+  },
+  "dependencies": {
+    "pdfjs-dist": "^4.0.0"
+  },
+  "devDependencies": {
+    "electron": "^34.0.0",
+    "electron-builder": "^25.0.0"
+  },
+  "build": {
+    "appId": "com.pdfprintersaver.app",
+    "productName": "PDF Printer Saver",
+    "copyright": "Copyright © 2026",
+    "directories": {
+      "buildResources": "build-assets"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer/**/*",
+      "node_modules/**/*",
+      "!node_modules/.cache/**/*",
+      "!node_modules/electron-builder/**/*",
+      "!node_modules/electron/**/*"
+    ],
+    "win": {
+      "target": [
+        { "target": "nsis", "arch": ["x64"] }
+      ],
+      "icon": "build-assets/icon.ico"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "build-assets/icon.icns"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "build-assets/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}
