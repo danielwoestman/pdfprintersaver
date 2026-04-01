@@ -89,6 +89,9 @@ function renderRows() {
     const tdBrowse = document.createElement('td');
     tdBrowse.className = 'col-browse';
 
+    const btnGroup = document.createElement('div');
+    btnGroup.className = 'btn-group';
+
     const browseBtn = document.createElement('button');
     browseBtn.className = 'btn-browse';
     browseBtn.textContent = 'Browse…';
@@ -99,25 +102,27 @@ function renderRows() {
         folderDisplay.textContent = folder;
         folderDisplay.title = folder;
         folderDisplay.classList.add('set');
+        clearBtn.disabled = false;
       }
     });
 
-    tdBrowse.appendChild(browseBtn);
+    const clearBtn = document.createElement('button');
+    clearBtn.className = 'btn-clear';
+    clearBtn.textContent = 'Clear';
+    clearBtn.disabled = !btn.folder;
+    clearBtn.addEventListener('click', () => {
+      const label = workingButtons[i].label || `Button ${i + 1}`;
+      if (!confirm(`Clear the folder for "${label}"?`)) return;
+      workingButtons[i].folder = '';
+      folderDisplay.textContent = 'No folder selected';
+      folderDisplay.title = '';
+      folderDisplay.classList.remove('set');
+      clearBtn.disabled = true;
+    });
 
-    if (btn.folder) {
-      const clearBtn = document.createElement('button');
-      clearBtn.className = 'btn-clear';
-      clearBtn.textContent = 'Clear';
-      clearBtn.addEventListener('click', () => {
-        workingButtons[i].folder = '';
-        folderDisplay.textContent = 'No folder selected';
-        folderDisplay.title = '';
-        folderDisplay.classList.remove('set');
-        clearBtn.remove();
-      });
-      tdBrowse.appendChild(clearBtn);
-    }
-
+    btnGroup.appendChild(browseBtn);
+    btnGroup.appendChild(clearBtn);
+    tdBrowse.appendChild(btnGroup);
     tr.appendChild(tdBrowse);
     tbody.appendChild(tr);
   });

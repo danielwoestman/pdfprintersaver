@@ -99,7 +99,15 @@
 
     .col-label { width: 180px; }
     .col-folder { }
-    .col-browse { width: 140px; text-align: right; }
+    .col-browse {
+      width: 210px;
+      white-space: nowrap;
+    }
+    .col-browse .btn-group {
+      display: flex;
+      gap: 6px;
+      justify-content: flex-end;
+    }
 
     input[type="text"] {
       width: 100%;
@@ -152,16 +160,12 @@
     .btn-browse:hover { background: #e5e7eb; }
 
     .btn-clear {
-      background: none;
-      border: none;
+      background: #fff5f5;
       color: var(--danger);
-      padding: 6px 8px;
-      font-size: 13px;            /* up from 11px */
-      font-weight: 500;
-      cursor: pointer;
-      min-height: auto;
+      border-color: #fecaca;
     }
-    .btn-clear:hover { text-decoration: underline; }
+    .btn-clear:hover:not(:disabled) { background: #fee2e2; border-color: #fca5a5; }
+    .btn-clear:disabled { opacity: 0.35; cursor: not-allowed; }
 
     /* ── Footer ── */
     .footer {
