@@ -227,20 +227,28 @@ function showToast(message, type = 'success') {
 let popupTimer = null;
 
 function showButtonPopup(buttonEl, message, isError = false) {
-  const rect = buttonEl.getBoundingClientRect();
-  // Centre the popup on the button horizontally, 10px below its bottom edge
-  const centreX = rect.left + rect.width / 2;
-  const top     = rect.bottom + 10;
+  const rect        = buttonEl.getBoundingClientRect();
+  const idealCentreX = rect.left + rect.width / 2;
+  const top          = rect.bottom + 10;
 
   actionPopup.textContent = message;
-  // Reset class first so the transition re-fires on repeated clicks
-  actionPopup.className = 'hidden';
-  // Force a reflow so the browser registers the class change before we remove hidden
-  void actionPopup.offsetWidth;
+  actionPopup.className   = 'hidden';
+  void actionPopup.offsetWidth; // force reflow so transition re-fires
 
-  actionPopup.style.left = `${centreX}px`;
+  actionPopup.style.left = `${idealCentreX}px`;
   actionPopup.style.top  = `${top}px`;
   actionPopup.className  = isError ? 'error' : '';
+
+  // After the browser lays out the popup, clamp so it never overflows either edge
+  requestAnimationFrame(() => {
+    const pr     = actionPopup.getBoundingClientRect();
+    const margin = 10;
+    if (pr.left < margin) {
+      actionPopup.style.left = `${idealCentreX + (margin - pr.left)}px`;
+    } else if (pr.right > window.innerWidth - margin) {
+      actionPopup.style.left = `${idealCentreX - (pr.right - (window.innerWidth - margin))}px`;
+    }
+  });
 
   clearTimeout(popupTimer);
   popupTimer = setTimeout(() => { actionPopup.className = 'hidden'; }, 2500);

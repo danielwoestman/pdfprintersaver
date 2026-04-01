@@ -153,12 +153,24 @@ ipcMain.handle('file:read', (event, filePath) => {
   }
 });
 
+function findAvailablePath(destFolder, filename) {
+  const ext      = path.extname(filename);
+  const base     = path.basename(filename, ext);
+  const today    = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  const dateName = `${base} ${today}`;
+  let candidate  = path.join(destFolder, `${dateName}${ext}`);
+  for (let i = 1; fs.existsSync(candidate); i++) {
+    candidate = path.join(destFolder, `${dateName} (${i})${ext}`);
+  }
+  return candidate;
+}
+
 ipcMain.handle('file:copy', (event, { src, destFolder }) => {
   try {
     if (!fs.existsSync(destFolder)) {
       fs.mkdirSync(destFolder, { recursive: true });
     }
-    const dest = path.join(destFolder, path.basename(src));
+    const dest = findAvailablePath(destFolder, path.basename(src));
     fs.copyFileSync(src, dest);
     return { success: true, dest };
   } catch (e) {
