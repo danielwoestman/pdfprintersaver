@@ -51,7 +51,7 @@
     html, body {
       height: 100%;
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-      font-size: 14px;
+      font-size: 15px;
       background: var(--bg);
       color: var(--text);
       -webkit-font-smoothing: antialiased;
@@ -69,14 +69,14 @@
 
     /* Page header */
     .page-header h1 {
-      font-size: 18px;
+      font-size: 20px;
       font-weight: 700;
       color: var(--text);
       letter-spacing: -0.02em;
     }
 
     .page-header p {
-      font-size: 13px;
+      font-size: 14px;
       color: var(--text-muted);
       margin-top: 3px;
     }
@@ -97,14 +97,14 @@
     }
 
     .fb-card-header h2 {
-      font-size: 14px;
+      font-size: 15px;
       font-weight: 600;
       color: var(--gray-700);
       letter-spacing: -0.01em;
     }
 
     .fb-card-header p {
-      font-size: 12px;
+      font-size: 13px;
       color: var(--text-muted);
       margin-top: 2px;
       line-height: 1.5;
@@ -116,9 +116,8 @@
 
     /* ── Save buttons table ── */
     .table-wrap {
-      flex: 1;
+      flex-shrink: 0;
       overflow-y: auto !important;
-      min-height: 0;
     }
 
     /* ── Flowbite table ── */
@@ -132,12 +131,12 @@
       position: sticky;
       top: 0;
       background: var(--gray-100);
-      padding: 10px 14px;
+      padding: 11px 14px;
       text-align: left;
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.07em;
+      letter-spacing: 0.06em;
       color: var(--gray-500);
       border-bottom: 1px solid var(--border);
       white-space: nowrap;
@@ -149,14 +148,14 @@
     tbody tr:hover { background: var(--blue-50); }
 
     td {
-      padding: 10px 14px;
+      padding: 11px 14px;
       vertical-align: middle;
     }
 
     .col-num {
       width: 40px;
       text-align: center;
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 600;
       color: var(--gray-400);
     }
@@ -170,11 +169,11 @@
     input[type="text"],
     input[type="email"] {
       width: 100%;
-      padding: 8px 10px;
+      padding: 9px 11px;
       border: 1px solid var(--gray-300);
       border-radius: var(--radius);
       font-family: inherit;
-      font-size: 13px;
+      font-size: 14px;
       color: var(--text);
       background: var(--surface);
       outline: none;
@@ -189,7 +188,7 @@
     }
 
     .folder-display {
-      font-size: 12px;
+      font-size: 13px;
       color: var(--gray-400);
       font-family: 'Consolas', 'Courier New', monospace;
       overflow: hidden;
@@ -201,13 +200,13 @@
 
     /* ── Flowbite buttons ── */
     button {
-      min-height: 36px;
-      padding: 0 16px;
+      min-height: 40px;
+      padding: 0 18px;
       border-radius: var(--radius);
       border: 1px solid transparent;
       cursor: pointer;
       font-family: inherit;
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 600;
       transition: background 0.12s, border-color 0.12s, color 0.12s;
       display: inline-flex;
@@ -248,10 +247,10 @@
       background: var(--surface);
       color: var(--gray-500);
       border-color: var(--gray-300);
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 500;
-      padding: 0 12px;
-      min-height: 32px;
+      padding: 0 14px;
+      min-height: 36px;
     }
     .btn-note:hover { background: var(--gray-100); color: var(--gray-700); border-color: var(--gray-400); }
     .btn-note.has-note {
@@ -273,16 +272,16 @@
 
     .printer-row select {
       flex: 1;
-      padding: 8px 10px;
+      padding: 9px 11px;
       border: 1px solid var(--gray-300);
       border-radius: var(--radius);
       font-family: inherit;
-      font-size: 13px;
+      font-size: 14px;
       color: var(--text);
       background: var(--surface);
       outline: none;
       cursor: pointer;
-      min-height: 36px;
+      min-height: 40px;
     }
 
     .printer-row select:focus {
@@ -291,10 +290,13 @@
     }
 
     /* ── Email templates table (reuses shared table styles above) ── */
-    .email-table-wrap { /* uses fb-card */ }
+    .email-table-wrap { flex-shrink: 0; }
+    .email-table-wrap thead,
+    .email-table-wrap tbody tr { display: table; width: 100%; table-layout: fixed; }
+    .email-table-wrap tbody { display: block; max-height: 175px; overflow-y: auto; }
     .email-section-header { /* uses fb-card-header */ }
 
-    .col-email-num   { width: 36px; text-align: center; font-size: 13px; font-weight: 600; color: var(--gray-400); }
+    .col-email-num   { width: 36px; text-align: center; font-size: 14px; font-weight: 600; color: var(--gray-400); }
     .col-email-label { width: 165px; }
     .col-email-to    { }
     .col-email-note  { width: 100px; text-align: right; }
