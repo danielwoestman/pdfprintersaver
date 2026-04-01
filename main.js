@@ -3,8 +3,11 @@ const path = require('path');
 const fs = require('fs');
 const { execFile } = require('child_process');
 
-// Linux: chrome-sandbox SUID setup is often missing in dev environments
-if (process.platform === 'linux') app.commandLine.appendSwitch('no-sandbox');
+if (process.platform === 'linux') {
+  app.commandLine.appendSwitch('no-sandbox');          // SUID sandbox not set up in dev
+  app.commandLine.appendSwitch('disable-gpu-vsync');   // suppresses GetVSyncParametersIfAvailable spam
+  app.commandLine.appendSwitch('disable-features', 'HardwareMediaKeyHandling,MediaSessionService');
+}
 
 let mainWindow = null;
 let settingsWindow = null;
