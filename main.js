@@ -230,7 +230,7 @@ ipcMain.handle('print:pdf', async (event, { filePath, printerName }) => {
   return new Promise((resolve) => {
     const printWin = new BrowserWindow({
       show: false,
-      width: 816,   // US Letter at 96dpi
+      width: 816,
       height: 1056,
       webPreferences: {
         nodeIntegration: false,
@@ -239,35 +239,47 @@ ipcMain.handle('print:pdf', async (event, { filePath, printerName }) => {
       },
     });
 
-    const fileUrl = 'file:///' + filePath.replace(/\\/g, '/');
-    printWin.loadURL(fileUrl);
-
+    let resolved = false;
     const cleanup = (result) => {
+      if (resolved) return;
+      resolved = true;
       if (!printWin.isDestroyed()) printWin.close();
       resolve(result);
     };
 
     const timer = setTimeout(
-      () => cleanup({ success: false, error: 'Print timed out after 30 s' }),
-      30000
+      () => cleanup({ success: false, error: 'Print timed out — check the printer is online and the name is correct' }),
+      60000
     );
 
+    // Load as base64 data URI — avoids file:// PDF rendering issues in hidden windows
+    let base64;
+    try {
+      base64 = fs.readFileSync(filePath).toString('base64');
+    } catch (e) {
+      clearTimeout(timer);
+      cleanup({ success: false, error: `Could not read file: ${e.message}` });
+      return;
+    }
+
+    printWin.loadURL(`data:application/pdf;base64,${base64}`);
+
     printWin.webContents.once('did-finish-load', () => {
-      // Allow Chromium's PDF viewer time to finish rendering before printing
+      // Give Chromium's PDF viewer time to render before sending to printer
       setTimeout(() => {
         printWin.webContents.print(
           { silent: true, deviceName: printerName, printBackground: true },
           (success, failureReason) => {
             clearTimeout(timer);
-            cleanup(success ? { success: true } : { success: false, error: failureReason });
+            cleanup(success ? { success: true } : { success: false, error: failureReason || 'Unknown print error' });
           }
         );
-      }, 1500);
+      }, 3000);
     });
 
     printWin.webContents.once('did-fail-load', (_, code, desc) => {
       clearTimeout(timer);
-      cleanup({ success: false, error: `Could not load PDF for printing: ${desc}` });
+      cleanup({ success: false, error: `Could not load PDF: ${desc}` });
     });
   });
 });
@@ -347,9 +359,8 @@ ipcMain.handle('pdf:process', async (event, { src, destFolder, rotation, signatu
     }
 
     if (signature) {
-      const fontBytes = fs.readFileSync(path.join(__dirname, 'assets', 'Sacramento-Regular.ttf'));
-      const sacramento = await doc.embedFont(fontBytes);
-      const helv = await doc.embedFont(StandardFonts.Helvetica);
+      const nameFont = await doc.embedFont(StandardFonts.TimesRomanBoldItalic);
+      const helv     = await doc.embedFont(StandardFonts.Helvetica);
 
       const lastPage = pages[pages.length - 1];
       const { width, height } = lastPage.getSize();
@@ -367,7 +378,7 @@ ipcMain.handle('pdf:process', async (event, { src, destFolder, rotation, signatu
 
       lastPage.drawText(signature.name, {
         x: bX + 10, y: bY + bH - 34,
-        font: sacramento, size: 26,
+        font: nameFont, size: 18,
         color: rgb(0.08, 0.1, 0.45),
       });
 
