@@ -2,6 +2,9 @@ const { app, BrowserWindow, ipcMain, dialog, Menu, shell } = require('electron')
 const path = require('path');
 const fs = require('fs');
 
+// Linux: chrome-sandbox SUID setup is often missing in dev environments
+if (process.platform === 'linux') app.commandLine.appendSwitch('no-sandbox');
+
 let mainWindow = null;
 let settingsWindow = null;
 

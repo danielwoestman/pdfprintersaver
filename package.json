@@ -4,7 +4,7 @@
   "description": "PDF viewer with configurable quick-save action buttons for staff document routing",
   "main": "main.js",
   "scripts": {
-    "start": "electron .",
+    "start": "electron --no-sandbox .",
     "build": "electron-builder",
     "build:win": "electron-builder --win",
     "build:mac": "electron-builder --mac",
