@@ -263,77 +263,30 @@ ipcMain.handle('printers:get', async () => {
   }
 });
 
-// Print PDF — use a hidden BrowserWindow so Chromium renders and prints the PDF
-// natively, avoiding reliance on external registered verbs (PrintTo) that break
-// once this app becomes the system default PDF handler.
+// No printer configured → open in OS default viewer
+// With printer on Linux/Mac → lp command
+// Windows printing is handled by print:window (canvas-based via renderer)
 ipcMain.handle('print:pdf', async (event, { filePath, printerName }) => {
   if (!printerName) {
     await shell.openPath(filePath);
     return { success: true };
   }
-
-  if (process.platform !== 'win32') {
-    // macOS / Linux: lp command
-    return new Promise((resolve) => {
-      execFile('lp', ['-d', printerName, filePath],
-        (err) => resolve(err ? { success: false, error: err.message } : { success: true }));
-    });
-  }
-
   return new Promise((resolve) => {
-    const printWin = new BrowserWindow({
-      show: false,
-      width: 816,
-      height: 1056,
-      webPreferences: {
-        nodeIntegration: false,
-        contextIsolation: true,
-        sandbox: false,
-      },
-    });
+    execFile('lp', ['-d', printerName, filePath],
+      (err) => resolve(err ? { success: false, error: err.message } : { success: true }));
+  });
+});
 
-    let resolved = false;
-    const cleanup = (result) => {
-      if (resolved) return;
-      resolved = true;
-      if (!printWin.isDestroyed()) printWin.close();
-      resolve(result);
-    };
-
-    const timer = setTimeout(
-      () => cleanup({ success: false, error: 'Print timed out — check the printer is online and the name is correct' }),
-      60000
+// Windows print: renderer renders all pages to canvases, then we print the main
+// window (which is already loaded + visible, so webContents.print() fires reliably)
+ipcMain.handle('print:window', (event, printerName) => {
+  return new Promise((resolve) => {
+    mainWindow.webContents.print(
+      { silent: true, deviceName: printerName, printBackground: true },
+      (success, failureReason) => {
+        resolve(success ? { success: true } : { success: false, error: failureReason || 'Print failed' });
+      }
     );
-
-    // Load as base64 data URI — avoids file:// PDF rendering issues in hidden windows
-    let base64;
-    try {
-      base64 = fs.readFileSync(filePath).toString('base64');
-    } catch (e) {
-      clearTimeout(timer);
-      cleanup({ success: false, error: `Could not read file: ${e.message}` });
-      return;
-    }
-
-    printWin.loadURL(`data:application/pdf;base64,${base64}`);
-
-    printWin.webContents.once('did-finish-load', () => {
-      // Give Chromium's PDF viewer time to render before sending to printer
-      setTimeout(() => {
-        printWin.webContents.print(
-          { silent: true, deviceName: printerName, printBackground: true },
-          (success, failureReason) => {
-            clearTimeout(timer);
-            cleanup(success ? { success: true } : { success: false, error: failureReason || 'Unknown print error' });
-          }
-        );
-      }, 3000);
-    });
-
-    printWin.webContents.once('did-fail-load', (_, code, desc) => {
-      clearTimeout(timer);
-      cleanup({ success: false, error: `Could not load PDF: ${desc}` });
-    });
   });
 });
 

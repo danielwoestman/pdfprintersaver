@@ -83,12 +83,13 @@
     #nav-toolbar {
       display: flex;
       align-items: center;
+      flex-wrap: wrap;
       gap: 4px;
-      padding: 10px 14px;
+      padding: 8px 14px;
       background: var(--toolbar-bg);
       border-bottom: 1px solid var(--toolbar-border);
       flex-shrink: 0;
-      min-height: 58px;
+      min-height: 52px;
       -webkit-app-region: drag;
       box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     }
@@ -105,6 +106,26 @@
       flex-shrink: 0;
       height: 52px;
       gap: 8px;
+    }
+
+    /* ── Print pages (canvas rendering for silent print) ── */
+    #print-pages { display: none; }
+
+    @media print {
+      @page { margin: 0; }
+      html, body { height: auto !important; overflow: visible !important; }
+      body > * { display: none !important; }
+      #print-pages {
+        display: block !important;
+        position: static !important;
+      }
+      #print-pages canvas {
+        display: block !important;
+        width: 100% !important;
+        height: auto !important;
+        page-break-after: always;
+      }
+      #print-pages canvas:last-child { page-break-after: avoid; }
     }
 
     #action-buttons-wrap {
@@ -134,12 +155,6 @@
       width: 40px;
       background: linear-gradient(to right, transparent, var(--toolbar-bg));
       pointer-events: none;
-    }
-
-    #fixed-buttons {
-      display: flex;
-      gap: 6px;
-      flex-shrink: 0;
     }
 
     /* ── Toolbar buttons (nav bar) ── */
@@ -680,22 +695,21 @@
       <div class="sep"></div>
       <button id="btn-rotate" class="toolbar-btn" title="Rotate 90° clockwise" disabled>↻ Rotate</button>
       <span id="rotation-label" class="rotation-label"></span>
+      <div class="sep"></div>
+      <div id="email-dropdown-wrap">
+        <button id="btn-email" class="action-btn email-btn" disabled>✉ Email ▾</button>
+        <div id="email-dropdown" class="hidden"></div>
+      </div>
+      <button id="btn-save-as"  class="action-btn save-as-btn"  disabled>💾 Save As</button>
+      <button id="btn-sign"     class="action-btn sign-btn"     disabled>✍ Sign</button>
+      <button id="btn-print"    class="action-btn print-btn"    disabled>🖨 Print</button>
+      <button id="btn-settings" class="action-btn settings-btn">⚙ Settings</button>
     </div>
 
-    <!-- Action toolbar -->
+    <!-- Action toolbar — custom save buttons only -->
     <div id="action-toolbar">
       <div id="action-buttons-wrap">
         <div id="action-buttons"><!-- populated by renderer.js --></div>
-      </div>
-      <div id="fixed-buttons">
-        <div id="email-dropdown-wrap">
-          <button id="btn-email" class="action-btn email-btn" disabled>✉ Email ▾</button>
-          <div id="email-dropdown" class="hidden"></div>
-        </div>
-        <button id="btn-save-as"  class="action-btn save-as-btn"  disabled>💾 Save As</button>
-        <button id="btn-sign"     class="action-btn sign-btn"     disabled>✍ Sign</button>
-        <button id="btn-print"    class="action-btn print-btn"    disabled>🖨 Print</button>
-        <button id="btn-settings" class="action-btn settings-btn">⚙ Settings</button>
       </div>
     </div>
 
@@ -748,6 +762,9 @@
       </div>
     </div>
   </div>
+
+  <!-- Print pages — hidden normally, shown only during printing -->
+  <div id="print-pages"></div>
 
   <!-- Toast notification (errors / non-button events) -->
   <div id="toast" class="hidden"></div>

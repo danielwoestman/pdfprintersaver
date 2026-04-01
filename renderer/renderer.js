@@ -296,8 +296,31 @@ document.addEventListener('click', () => emailDropdown.classList.add('hidden'));
 
 document.getElementById('btn-print').addEventListener('click', async () => {
   if (!currentPath) return;
-  const result = await window.electronAPI.printPDF(currentPath, settings.defaultPrinter || null);
-  if (result && !result.success) showToast(`✗ Print failed: ${result.error}`, 'error');
+  const printerName = settings.defaultPrinter || null;
+
+  if (!printerName) {
+    // No printer set — open in system default viewer
+    const result = await window.electronAPI.printPDF(currentPath, null);
+    if (result && !result.success) showToast(`✗ Print failed: ${result.error}`, 'error');
+    return;
+  }
+
+  // Render all pages to canvases, then silently print the main window
+  const printPages = document.getElementById('print-pages');
+  printPages.innerHTML = '';
+  for (let i = 1; i <= totalPages; i++) {
+    const page     = await pdfDoc.getPage(i);
+    const viewport = page.getViewport({ scale: 2.0, rotation: displayRotation });
+    const c        = document.createElement('canvas');
+    c.width  = viewport.width;
+    c.height = viewport.height;
+    await page.render({ canvasContext: c.getContext('2d'), viewport }).promise;
+    printPages.appendChild(c);
+  }
+
+  const result = await window.electronAPI.printWindow(printerName);
+  printPages.innerHTML = '';
+  if (!result.success) showToast(`✗ Print failed: ${result.error}`, 'error');
 });
 
 document.getElementById('btn-settings').addEventListener('click', () => {
@@ -433,6 +456,7 @@ function applySignature() {
   document.getElementById('btn-sign').classList.add('active');
   document.getElementById('btn-sign').textContent = `✍ Signed`;
   closeSignModal();
+  showToast('Signature ready — will be embedded in the saved copy', 'success');
 }
 
 function clearSignature() {

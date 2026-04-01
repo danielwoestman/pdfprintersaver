@@ -19,6 +19,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Window / app actions
   openSettings: () => ipcRenderer.send('window:openSettings'),
   printPDF: (filePath, printerName) => ipcRenderer.invoke('print:pdf', { filePath, printerName }),
+  printWindow: (printerName) => ipcRenderer.invoke('print:window', printerName),
   getPrinters: () => ipcRenderer.invoke('printers:get'),
   emailPDF: (toAddress, filePath, note) => ipcRenderer.invoke('email:open', { toAddress, filePath, note }),
 
