@@ -8,37 +8,58 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --toolbar-bg: #2b2d42;
-      --toolbar-border: #1a1b2e;
-      --toolbar-text: #edf2f4;
-      --btn-bg: #3a3d5c;
-      --btn-hover: #4a4f76;
-      --btn-active: #5a5f86;
-      --btn-text: #edf2f4;
-      --action-bg: #2563eb;
-      --action-hover: #1d4ed8;
-      --action-disabled-bg: #4b5563;
-      --action-disabled-text: #9ca3af;
-      --print-bg: #7c3aed;
-      --print-hover: #6d28d9;
-      --settings-bg: #374151;
-      --settings-hover: #4b5563;
-      --pdf-bg: #525659;
-      --status-bg: #1e2033;
-      --status-text: #9ca3af;
-      --status-highlight: #edf2f4;
+      --app-bg: #F4F4F5;
+      --toolbar-bg: #FFFFFF;
+      --toolbar-border: #E4E4E7;
+      --text: #111827;
+      --text-muted: #6B7280;
+      --text-faint: #9CA3AF;
+
+      /* Nav buttons */
+      --nav-btn-bg: #F4F4F5;
+      --nav-btn-hover: #E4E4E7;
+      --nav-btn-active: #D4D4D8;
+      --nav-btn-border: #E4E4E7;
+
+      /* Open PDF primary */
+      --primary: #2563EB;
+      --primary-hover: #1D4ED8;
+
+      /* Tab action buttons */
+      --tab-bg: #FFFFFF;
+      --tab-border: #E4E4E7;
+      --tab-hover: #F4F4F5;
+      --tab-active-bg: #EFF6FF;
+      --tab-active-border: #BFDBFE;
+      --tab-active-text: #1D4ED8;
+      --tab-unconfigured-bg: #FAFAFA;
+      --tab-unconfigured-text: #9CA3AF;
+
+      /* Print & Settings */
+      --print-bg: #7C3AED;
+      --print-hover: #6D28D9;
+
+      /* Canvas */
+      --pdf-bg: #E8E8EA;
+      --canvas-shadow: 0 2px 16px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.08);
+
+      /* Status */
+      --status-bg: #FFFFFF;
+      --status-border: #E4E4E7;
+
+      /* Toast */
       --toast-success: #059669;
-      --toast-error: #dc2626;
-      --separator: #3d4060;
+      --toast-error: #DC2626;
     }
 
     html, body {
       height: 100%;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
       font-size: 13px;
-      background: var(--pdf-bg);
-      color: var(--toolbar-text);
+      background: var(--app-bg);
+      color: var(--text);
       overflow: hidden;
+      -webkit-font-smoothing: antialiased;
     }
 
     #app {
@@ -51,7 +72,7 @@
     #nav-toolbar {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 3px;
       padding: 6px 10px;
       background: var(--toolbar-bg);
       border-bottom: 1px solid var(--toolbar-border);
@@ -65,116 +86,176 @@
     #action-toolbar {
       display: flex;
       align-items: center;
-      flex-wrap: wrap;
-      gap: 4px;
-      padding: 6px 10px;
-      background: #232538;
+      padding: 0 10px;
+      background: var(--toolbar-bg);
       border-bottom: 1px solid var(--toolbar-border);
       flex-shrink: 0;
+      height: 40px;
+      gap: 6px;
+    }
+
+    /* Scrollable tab strip */
+    #action-buttons-wrap {
+      flex: 1;
+      min-width: 0;
+      position: relative;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
     }
 
     #action-buttons {
       display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-      flex: 1;
+      gap: 2px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      scroll-behavior: smooth;
+      padding: 4px 0;
+    }
+    #action-buttons::-webkit-scrollbar { display: none; }
+
+    /* Fade-out gradient on right edge when overflowing */
+    #action-buttons-wrap::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 32px;
+      background: linear-gradient(to right, transparent, var(--toolbar-bg));
+      pointer-events: none;
     }
 
     #fixed-buttons {
       display: flex;
       gap: 4px;
-      margin-left: auto;
+      flex-shrink: 0;
     }
 
-    /* ── Buttons ── */
+    /* ── Nav toolbar buttons ── */
     .toolbar-btn {
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 4px;
-      padding: 5px 10px;
-      background: var(--btn-bg);
-      color: var(--btn-text);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 4px;
+      padding: 4px 9px;
+      background: var(--nav-btn-bg);
+      color: var(--text);
+      border: 1px solid var(--nav-btn-border);
+      border-radius: 5px;
       cursor: pointer;
       font-size: 12px;
       font-family: inherit;
       white-space: nowrap;
-      transition: background 0.15s;
+      transition: background 0.1s, border-color 0.1s;
+      line-height: 1;
     }
-    .toolbar-btn:hover:not(:disabled) { background: var(--btn-hover); }
-    .toolbar-btn:active:not(:disabled) { background: var(--btn-active); }
-    .toolbar-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .toolbar-btn:hover:not(:disabled) {
+      background: var(--nav-btn-hover);
+      border-color: #D1D5DB;
+    }
+    .toolbar-btn:active:not(:disabled) { background: var(--nav-btn-active); }
+    .toolbar-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
     .toolbar-btn.primary {
-      background: var(--action-bg);
+      background: var(--primary);
+      color: #fff;
       border-color: transparent;
       font-weight: 500;
+      padding: 4px 12px;
     }
-    .toolbar-btn.primary:hover:not(:disabled) { background: var(--action-hover); }
+    .toolbar-btn.primary:hover:not(:disabled) {
+      background: var(--primary-hover);
+    }
 
+    /* ── Tab action buttons ── */
     .action-btn {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
-      padding: 5px 12px;
-      background: var(--action-bg);
-      color: #fff;
-      border: 1px solid transparent;
-      border-radius: 4px;
+      padding: 4px 11px;
+      background: var(--tab-bg);
+      color: var(--text);
+      border: 1px solid var(--tab-border);
+      border-radius: 5px;
       cursor: pointer;
       font-size: 12px;
       font-weight: 500;
       font-family: inherit;
       white-space: nowrap;
-      min-width: 70px;
-      transition: background 0.15s, opacity 0.15s;
+      transition: background 0.1s, border-color 0.1s, color 0.1s;
+      line-height: 1.4;
+      flex-shrink: 0;
     }
-    .action-btn:hover:not(:disabled) { background: var(--action-hover); }
-    .action-btn:active:not(:disabled) { filter: brightness(0.9); }
-    .action-btn:disabled {
-      background: var(--action-disabled-bg);
-      color: var(--action-disabled-text);
-      cursor: not-allowed;
+    .action-btn:hover:not(:disabled) {
+      background: var(--tab-hover);
+      border-color: #D1D5DB;
     }
+    .action-btn:active:not(:disabled) {
+      background: var(--tab-active-bg);
+      border-color: var(--tab-active-border);
+      color: var(--tab-active-text);
+    }
+    .action-btn:disabled { cursor: not-allowed; }
+
     .action-btn.unconfigured {
-      background: var(--action-disabled-bg);
-      color: var(--action-disabled-text);
+      background: var(--tab-unconfigured-bg);
+      color: var(--tab-unconfigured-text);
       font-weight: 400;
       font-style: italic;
+      border-style: dashed;
     }
+
     .action-btn.print-btn {
       background: var(--print-bg);
+      color: #fff;
+      border-color: transparent;
+      font-style: normal;
     }
-    .action-btn.print-btn:hover:not(:disabled) { background: var(--print-hover); }
+    .action-btn.print-btn:hover:not(:disabled) {
+      background: var(--print-hover);
+    }
+    .action-btn.print-btn:disabled {
+      background: #C4B5FD;
+      color: #fff;
+    }
+
     .action-btn.settings-btn {
-      background: var(--settings-bg);
+      background: var(--nav-btn-bg);
+      color: var(--text-muted);
+      border-color: var(--nav-btn-border);
+      font-style: normal;
+      font-weight: 400;
     }
-    .action-btn.settings-btn:hover { background: var(--settings-hover); }
+    .action-btn.settings-btn:hover {
+      background: var(--nav-btn-hover);
+      color: var(--text);
+    }
 
     /* ── Separator ── */
     .sep {
       width: 1px;
-      height: 20px;
-      background: var(--separator);
-      margin: 0 4px;
+      height: 16px;
+      background: var(--toolbar-border);
+      margin: 0 5px;
       flex-shrink: 0;
     }
 
-    /* ── Page info ── */
+    /* ── Page info / zoom label ── */
     #page-info {
-      min-width: 72px;
+      min-width: 64px;
       text-align: center;
       font-size: 12px;
-      color: var(--toolbar-text);
-      opacity: 0.8;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
     }
 
     #zoom-level {
-      min-width: 44px;
+      min-width: 40px;
       text-align: center;
       font-size: 12px;
-      color: var(--toolbar-text);
-      opacity: 0.8;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
     }
 
     /* ── PDF area ── */
@@ -185,7 +266,7 @@
       flex-direction: column;
       align-items: center;
       background: var(--pdf-bg);
-      padding: 24px 24px;
+      padding: 28px;
     }
 
     #pdf-empty-state {
@@ -194,31 +275,32 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 12px;
-      color: rgba(255,255,255,0.4);
+      gap: 10px;
+      color: #A1A1AA;
       user-select: none;
       pointer-events: none;
     }
 
     #pdf-empty-state .icon {
-      font-size: 64px;
-      opacity: 0.3;
+      font-size: 52px;
+      opacity: 0.4;
+      filter: grayscale(1);
     }
 
     #pdf-empty-state h2 {
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 500;
+      color: #71717A;
     }
 
     #pdf-empty-state p {
-      font-size: 13px;
-      opacity: 0.7;
+      font-size: 12px;
+      color: #A1A1AA;
     }
 
     #pdf-canvas {
       display: none;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.5);
-      border-radius: 2px;
+      box-shadow: var(--canvas-shadow);
       background: white;
     }
 
@@ -228,33 +310,34 @@
       align-items: center;
       justify-content: space-between;
       padding: 0 12px;
-      height: 26px;
+      height: 24px;
       background: var(--status-bg);
-      border-top: 1px solid var(--toolbar-border);
+      border-top: 1px solid var(--status-border);
       flex-shrink: 0;
       font-size: 11px;
-      color: var(--status-text);
+      color: var(--text-faint);
+      font-variant-numeric: tabular-nums;
     }
 
     #status-file { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    #status-msg { color: var(--status-highlight); transition: opacity 0.3s; }
+    #status-msg { color: #059669; transition: opacity 0.3s; }
     #status-msg.hidden { opacity: 0; }
 
     /* ── Toast ── */
     #toast {
       position: fixed;
-      bottom: 44px;
-      right: 20px;
-      padding: 10px 18px;
+      bottom: 36px;
+      right: 16px;
+      padding: 8px 16px;
       border-radius: 6px;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 500;
       z-index: 9999;
       pointer-events: none;
-      transition: opacity 0.25s ease, transform 0.25s ease;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15), 0 1px 3px rgba(0,0,0,0.1);
     }
-    #toast.hidden { opacity: 0; transform: translateY(8px); }
+    #toast.hidden  { opacity: 0; transform: translateY(6px); }
     #toast.success { background: var(--toast-success); color: #fff; opacity: 1; transform: translateY(0); }
     #toast.error   { background: var(--toast-error);   color: #fff; opacity: 1; transform: translateY(0); }
   </style>
@@ -278,7 +361,9 @@
 
     <!-- Action toolbar -->
     <div id="action-toolbar">
-      <div id="action-buttons"><!-- populated by renderer.js --></div>
+      <div id="action-buttons-wrap">
+        <div id="action-buttons"><!-- populated by renderer.js --></div>
+      </div>
       <div id="fixed-buttons">
         <button id="btn-print"    class="action-btn print-btn"    disabled>🖨 Print</button>
         <button id="btn-settings" class="action-btn settings-btn">⚙ Settings</button>
