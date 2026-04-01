@@ -346,6 +346,43 @@
     #toast.hidden  { opacity: 0; transform: translateY(6px); }
     #toast.success { background: var(--toast-success); color: #fff; opacity: 1; transform: translateY(0); }
     #toast.error   { background: var(--toast-error);   color: #fff; opacity: 1; transform: translateY(0); }
+
+    /* ── Button popup (appears just below the clicked action button) ── */
+    #action-popup {
+      position: fixed;
+      z-index: 9999;
+      padding: 7px 16px;
+      border-radius: 7px;
+      font-size: 14px;
+      font-weight: 600;
+      pointer-events: none;
+      white-space: nowrap;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.18);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      transform: translateX(-50%) translateY(0);
+      /* caret color driven by per-instance custom property */
+      --popup-bg: #047857;
+      background: var(--popup-bg);
+      color: #fff;
+    }
+    #action-popup.hidden {
+      opacity: 0;
+      transform: translateX(-50%) translateY(4px);
+    }
+    #action-popup.error { --popup-bg: #B91C1C; }
+    /* upward-pointing caret */
+    #action-popup::before {
+      content: '';
+      position: absolute;
+      top: -7px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 7px solid transparent;
+      border-right: 7px solid transparent;
+      border-bottom: 7px solid var(--popup-bg);
+    }
   </style>
 </head>
 <body>
@@ -394,8 +431,10 @@
 
   </div>
 
-  <!-- Toast notification -->
+  <!-- Toast notification (errors / non-button events) -->
   <div id="toast" class="hidden"></div>
+  <!-- Per-button save confirmation popup -->
+  <div id="action-popup" class="hidden"></div>
 
   <script type="module" src="renderer.js"></script>
 </body>

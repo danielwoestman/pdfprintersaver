@@ -17,15 +17,16 @@ let settings     = { buttons: [] };
 
 // ── DOM refs ──────────────────────────────────────────────────────────────────
 
-const canvas      = document.getElementById('pdf-canvas');
-const ctx         = canvas.getContext('2d');
-const emptyState  = document.getElementById('pdf-empty-state');
-const pageInfo    = document.getElementById('page-info');
-const zoomLabel   = document.getElementById('zoom-level');
-const statusFile  = document.getElementById('status-file');
-const statusMsg   = document.getElementById('status-msg');
-const toast       = document.getElementById('toast');
-const actionBtns  = document.getElementById('action-buttons');
+const canvas       = document.getElementById('pdf-canvas');
+const ctx          = canvas.getContext('2d');
+const emptyState   = document.getElementById('pdf-empty-state');
+const pageInfo     = document.getElementById('page-info');
+const zoomLabel    = document.getElementById('zoom-level');
+const statusFile   = document.getElementById('status-file');
+const statusMsg    = document.getElementById('status-msg');
+const toast        = document.getElementById('toast');
+const actionBtns   = document.getElementById('action-buttons');
+const actionPopup  = document.getElementById('action-popup');
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 
@@ -56,7 +57,7 @@ function renderActionButtons() {
     el.title = configured
       ? `Copy PDF to: ${btn.folder}`
       : 'Not configured — open Settings to set a label and folder';
-    el.addEventListener('click', () => handleActionButton(i));
+    el.addEventListener('click', (e) => handleActionButton(i, e.currentTarget));
     actionBtns.appendChild(el);
   });
 }
@@ -70,17 +71,17 @@ function syncActionButtonState() {
   document.getElementById('btn-print').disabled = !currentPath;
 }
 
-async function handleActionButton(index) {
+async function handleActionButton(index, buttonEl) {
   if (!currentPath) return;
   const btn = settings.buttons[index];
   if (!btn?.label || !btn?.folder) return;
 
   const result = await window.electronAPI.copyFile(currentPath, btn.folder);
   if (result.success) {
-    showToast(`✓ Saved to "${btn.label}"`, 'success');
+    showButtonPopup(buttonEl, `✓ Saved to "${btn.label}"`);
     showStatus(`Copied → ${result.dest}`);
   } else {
-    showToast(`✗ Copy failed: ${result.error}`, 'error');
+    showButtonPopup(buttonEl, `✗ ${result.error}`, true);
   }
 }
 
@@ -188,8 +189,10 @@ document.getElementById('btn-zoom-fit').addEventListener('click', async () => {
   changeZoom(fit);
 });
 
-document.getElementById('btn-print').addEventListener('click', () => {
-  if (currentPath) window.electronAPI.printPDF(currentPath);
+document.getElementById('btn-print').addEventListener('click', async () => {
+  if (!currentPath) return;
+  const result = await window.electronAPI.printPDF(currentPath, settings.defaultPrinter || null);
+  if (result && !result.success) showToast(`✗ Print failed: ${result.error}`, 'error');
 });
 
 document.getElementById('btn-settings').addEventListener('click', () => {
@@ -216,9 +219,31 @@ let toastTimer = null;
 
 function showToast(message, type = 'success') {
   toast.textContent = message;
-  toast.className = type; // 'success' | 'error'
+  toast.className = type;
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => { toast.className = 'hidden'; }, 3200);
+}
+
+let popupTimer = null;
+
+function showButtonPopup(buttonEl, message, isError = false) {
+  const rect = buttonEl.getBoundingClientRect();
+  // Centre the popup on the button horizontally, 10px below its bottom edge
+  const centreX = rect.left + rect.width / 2;
+  const top     = rect.bottom + 10;
+
+  actionPopup.textContent = message;
+  // Reset class first so the transition re-fires on repeated clicks
+  actionPopup.className = 'hidden';
+  // Force a reflow so the browser registers the class change before we remove hidden
+  void actionPopup.offsetWidth;
+
+  actionPopup.style.left = `${centreX}px`;
+  actionPopup.style.top  = `${top}px`;
+  actionPopup.className  = isError ? 'error' : '';
+
+  clearTimeout(popupTimer);
+  popupTimer = setTimeout(() => { actionPopup.className = 'hidden'; }, 2500);
 }
 
 let statusTimer = null;

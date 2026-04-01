@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain, dialog, Menu, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const { execFile } = require('child_process');
 
 // Linux: chrome-sandbox SUID setup is often missing in dev environments
 if (process.platform === 'linux') app.commandLine.appendSwitch('no-sandbox');
@@ -25,6 +26,7 @@ function loadSettings() {
   }
   return {
     buttons: Array.from({ length: 10 }, () => ({ label: '', folder: '' })),
+    defaultPrinter: '',
   };
 }
 
@@ -100,7 +102,7 @@ function openSettingsWindow() {
 
   settingsWindow = new BrowserWindow({
     width: 780,
-    height: 720,
+    height: 800,
     resizable: false,
     parent: mainWindow,
     modal: true,
@@ -177,8 +179,36 @@ ipcMain.handle('settings:save', (event, settings) => {
 
 ipcMain.on('window:openSettings', openSettingsWindow);
 
-// Open PDF with the OS default app for native multi-page printing
-ipcMain.handle('print:pdf', (event, filePath) => shell.openPath(filePath));
+// List available printers via the main window's webContents
+ipcMain.handle('printers:get', async () => {
+  try {
+    const list = await mainWindow.webContents.getPrintersAsync();
+    return list.map(p => ({ name: p.name, isDefault: p.isDefault }));
+  } catch (e) {
+    return [];
+  }
+});
+
+// Print PDF — direct to printer if one is configured, else open in OS viewer
+ipcMain.handle('print:pdf', async (event, { filePath, printerName }) => {
+  if (!printerName) {
+    await shell.openPath(filePath);
+    return { success: true };
+  }
+  return new Promise((resolve) => {
+    if (process.platform === 'win32') {
+      // PrintTo verb routes to the registered PDF handler's print target
+      execFile('powershell.exe', [
+        '-NoProfile', '-NonInteractive', '-Command',
+        `Start-Process -FilePath "${filePath.replace(/"/g, '\\"')}" -Verb PrintTo -ArgumentList "${printerName.replace(/"/g, '\\"')}"`,
+      ], (err) => resolve(err ? { success: false, error: err.message } : { success: true }));
+    } else {
+      // macOS / Linux: lp command
+      execFile('lp', ['-d', printerName, filePath],
+        (err) => resolve(err ? { success: false, error: err.message } : { success: true }));
+    }
+  });
+});
 
 // ── App lifecycle ─────────────────────────────────────────────────────────────
 

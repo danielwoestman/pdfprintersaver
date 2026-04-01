@@ -194,6 +194,50 @@
     }
     #save-status.ok { color: #047857; }
     #save-status.err { color: var(--danger); }
+
+    /* ── Printer section ── */
+    .printer-section {
+      padding: 18px 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+
+    .printer-section h2 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .printer-section .subtitle {
+      margin-top: 0;
+      margin-bottom: 14px;
+    }
+
+    .printer-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .printer-row select {
+      flex: 1;
+      padding: 8px 10px;
+      border: 1px solid var(--input-border);
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--text);
+      background: #fff;
+      outline: none;
+      cursor: pointer;
+      min-height: 38px;
+    }
+
+    .printer-row select:focus {
+      border-color: var(--input-focus);
+      box-shadow: 0 0 0 3px rgba(29,78,216,0.15);
+    }
   </style>
 </head>
 <body>
@@ -217,6 +261,18 @@
           <!-- Populated by settings.js -->
         </tbody>
       </table>
+    </div>
+
+    <!-- Default printer -->
+    <div class="printer-section">
+      <h2>Default Printer</h2>
+      <p class="subtitle">When set, the Print button sends directly to this printer. Leave on "Open in viewer" to use your system's PDF viewer instead.</p>
+      <div class="printer-row">
+        <select id="printer-select">
+          <option value="">— Open in PDF viewer (default) —</option>
+        </select>
+        <button class="btn-browse" id="btn-detect-printers">Detect Printers</button>
+      </div>
     </div>
 
     <div class="footer">

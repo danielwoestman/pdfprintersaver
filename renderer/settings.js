@@ -1,15 +1,52 @@
-// Settings window — configure the 10 action buttons
+// Settings window — configure the 10 action buttons + default printer
 
-let workingButtons = [];   // local copy being edited
+let workingButtons = [];
+let workingPrinter = '';
 
 async function init() {
   const settings = await window.electronAPI.getSettings();
-  // Deep copy to avoid mutating until Save is clicked
   workingButtons = settings.buttons.map(b => ({ label: b.label || '', folder: b.folder || '' }));
-  // Ensure exactly 10 entries
   while (workingButtons.length < 10) workingButtons.push({ label: '', folder: '' });
+  workingPrinter = settings.defaultPrinter || '';
   renderRows();
+  await populatePrinters(workingPrinter);
 }
+
+async function populatePrinters(selectedName) {
+  const select = document.getElementById('printer-select');
+  const printers = await window.electronAPI.getPrinters();
+
+  // Remove all options except the first placeholder
+  while (select.options.length > 1) select.remove(1);
+
+  printers.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.name;
+    opt.textContent = p.name + (p.isDefault ? ' (system default)' : '');
+    if (p.name === selectedName) opt.selected = true;
+    select.appendChild(opt);
+  });
+
+  // If the saved printer wasn't found in the list (e.g. disconnected), add it anyway
+  if (selectedName && !printers.find(p => p.name === selectedName)) {
+    const opt = document.createElement('option');
+    opt.value = selectedName;
+    opt.textContent = `${selectedName} (not detected)`;
+    opt.selected = true;
+    select.appendChild(opt);
+  }
+
+  select.addEventListener('change', () => { workingPrinter = select.value; });
+}
+
+document.getElementById('btn-detect-printers').addEventListener('click', async () => {
+  const btn = document.getElementById('btn-detect-printers');
+  btn.textContent = 'Detecting…';
+  btn.disabled = true;
+  await populatePrinters(workingPrinter);
+  btn.textContent = 'Detect Printers';
+  btn.disabled = false;
+});
 
 function renderRows() {
   const tbody = document.getElementById('settings-body');
@@ -91,7 +128,7 @@ document.getElementById('btn-save').addEventListener('click', async () => {
   statusEl.textContent = 'Saving…';
   statusEl.className = '';
 
-  const result = await window.electronAPI.saveSettings({ buttons: workingButtons });
+  const result = await window.electronAPI.saveSettings({ buttons: workingButtons, defaultPrinter: workingPrinter });
 
   if (result.success) {
     statusEl.textContent = '✓ Saved';
