@@ -99,8 +99,8 @@ function openSettingsWindow() {
   }
 
   settingsWindow = new BrowserWindow({
-    width: 720,
-    height: 640,
+    width: 780,
+    height: 720,
     resizable: false,
     parent: mainWindow,
     modal: true,

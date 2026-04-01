@@ -10,52 +10,52 @@
     :root {
       --app-bg: #F4F4F5;
       --toolbar-bg: #FFFFFF;
-      --toolbar-border: #E4E4E7;
+      --toolbar-border: #D1D5DB;  /* slightly darker border — easier to see */
       --text: #111827;
-      --text-muted: #6B7280;
-      --text-faint: #9CA3AF;
+      --text-muted: #374151;      /* darkened from #6B7280 — WCAG AA on white */
+      --text-faint: #4B5563;      /* darkened from #9CA3AF — readable status bar */
 
       /* Nav buttons */
       --nav-btn-bg: #F4F4F5;
       --nav-btn-hover: #E4E4E7;
       --nav-btn-active: #D4D4D8;
-      --nav-btn-border: #E4E4E7;
+      --nav-btn-border: #D1D5DB;
 
       /* Open PDF primary */
-      --primary: #2563EB;
-      --primary-hover: #1D4ED8;
+      --primary: #1D4ED8;         /* slightly deeper blue — higher contrast */
+      --primary-hover: #1E40AF;
 
       /* Tab action buttons */
       --tab-bg: #FFFFFF;
-      --tab-border: #E4E4E7;
+      --tab-border: #D1D5DB;
       --tab-hover: #F4F4F5;
       --tab-active-bg: #EFF6FF;
-      --tab-active-border: #BFDBFE;
+      --tab-active-border: #93C5FD;
       --tab-active-text: #1D4ED8;
       --tab-unconfigured-bg: #FAFAFA;
-      --tab-unconfigured-text: #9CA3AF;
+      --tab-unconfigured-text: #6B7280;
 
       /* Print & Settings */
-      --print-bg: #7C3AED;
-      --print-hover: #6D28D9;
+      --print-bg: #6D28D9;        /* slightly deeper purple */
+      --print-hover: #5B21B6;
 
       /* Canvas */
-      --pdf-bg: #E8E8EA;
-      --canvas-shadow: 0 2px 16px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.08);
+      --pdf-bg: #D1D5DB;          /* slightly darker surround = more contrast with white page */
+      --canvas-shadow: 0 4px 24px rgba(0,0,0,0.18), 0 1px 6px rgba(0,0,0,0.10);
 
       /* Status */
-      --status-bg: #FFFFFF;
-      --status-border: #E4E4E7;
+      --status-bg: #F9FAFB;
+      --status-border: #D1D5DB;
 
       /* Toast */
-      --toast-success: #059669;
-      --toast-error: #DC2626;
+      --toast-success: #047857;
+      --toast-error: #B91C1C;
     }
 
     html, body {
       height: 100%;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-      font-size: 13px;
+      font-size: 15px;            /* up from 13px */
       background: var(--app-bg);
       color: var(--text);
       overflow: hidden;
@@ -72,11 +72,12 @@
     #nav-toolbar {
       display: flex;
       align-items: center;
-      gap: 3px;
-      padding: 6px 10px;
+      gap: 4px;
+      padding: 8px 12px;          /* up from 6px 10px */
       background: var(--toolbar-bg);
       border-bottom: 1px solid var(--toolbar-border);
       flex-shrink: 0;
+      min-height: 56px;           /* up from implicit ~44px */
       -webkit-app-region: drag;
     }
 
@@ -86,12 +87,12 @@
     #action-toolbar {
       display: flex;
       align-items: center;
-      padding: 0 10px;
+      padding: 0 12px;
       background: var(--toolbar-bg);
       border-bottom: 1px solid var(--toolbar-border);
       flex-shrink: 0;
-      height: 40px;
-      gap: 6px;
+      height: 52px;               /* up from 40px */
+      gap: 8px;
     }
 
     /* Scrollable tab strip */
@@ -106,12 +107,12 @@
 
     #action-buttons {
       display: flex;
-      gap: 2px;
+      gap: 4px;                   /* up from 2px */
       overflow-x: auto;
       scrollbar-width: none;
       -ms-overflow-style: none;
       scroll-behavior: smooth;
-      padding: 4px 0;
+      padding: 6px 0;
     }
     #action-buttons::-webkit-scrollbar { display: none; }
 
@@ -122,30 +123,31 @@
       right: 0;
       top: 0;
       bottom: 0;
-      width: 32px;
+      width: 40px;
       background: linear-gradient(to right, transparent, var(--toolbar-bg));
       pointer-events: none;
     }
 
     #fixed-buttons {
       display: flex;
-      gap: 4px;
+      gap: 6px;
       flex-shrink: 0;
     }
 
-    /* ── Nav toolbar buttons ── */
+    /* ── Nav toolbar buttons — 44px minimum touch target ── */
     .toolbar-btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 4px;
-      padding: 4px 9px;
+      gap: 5px;
+      min-height: 40px;           /* WCAG minimum */
+      padding: 8px 13px;          /* up from 4px 9px */
       background: var(--nav-btn-bg);
       color: var(--text);
       border: 1px solid var(--nav-btn-border);
-      border-radius: 5px;
+      border-radius: 6px;
       cursor: pointer;
-      font-size: 12px;
+      font-size: 14px;            /* up from 12px */
       font-family: inherit;
       white-space: nowrap;
       transition: background 0.1s, border-color 0.1s;
@@ -153,17 +155,17 @@
     }
     .toolbar-btn:hover:not(:disabled) {
       background: var(--nav-btn-hover);
-      border-color: #D1D5DB;
+      border-color: #9CA3AF;
     }
     .toolbar-btn:active:not(:disabled) { background: var(--nav-btn-active); }
-    .toolbar-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .toolbar-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
     .toolbar-btn.primary {
       background: var(--primary);
       color: #fff;
       border-color: transparent;
-      font-weight: 500;
-      padding: 4px 12px;
+      font-weight: 600;           /* bolder */
+      padding: 8px 18px;
     }
     .toolbar-btn.primary:hover:not(:disabled) {
       background: var(--primary-hover);
@@ -173,23 +175,24 @@
     .action-btn {
       display: inline-flex;
       align-items: center;
-      padding: 4px 11px;
+      min-height: 38px;           /* tall enough to hit easily */
+      padding: 8px 16px;          /* up from 4px 11px */
       background: var(--tab-bg);
       color: var(--text);
       border: 1px solid var(--tab-border);
-      border-radius: 5px;
+      border-radius: 6px;
       cursor: pointer;
-      font-size: 12px;
-      font-weight: 500;
+      font-size: 14px;            /* up from 12px */
+      font-weight: 600;           /* bolder — easier to read label */
       font-family: inherit;
       white-space: nowrap;
       transition: background 0.1s, border-color 0.1s, color 0.1s;
-      line-height: 1.4;
+      line-height: 1.3;
       flex-shrink: 0;
     }
     .action-btn:hover:not(:disabled) {
       background: var(--tab-hover);
-      border-color: #D1D5DB;
+      border-color: #9CA3AF;
     }
     .action-btn:active:not(:disabled) {
       background: var(--tab-active-bg);
@@ -216,7 +219,7 @@
       background: var(--print-hover);
     }
     .action-btn.print-btn:disabled {
-      background: #C4B5FD;
+      background: #A78BFA;
       color: #fff;
     }
 
@@ -235,25 +238,27 @@
     /* ── Separator ── */
     .sep {
       width: 1px;
-      height: 16px;
+      height: 22px;               /* up from 16px */
       background: var(--toolbar-border);
-      margin: 0 5px;
+      margin: 0 6px;
       flex-shrink: 0;
     }
 
     /* ── Page info / zoom label ── */
     #page-info {
-      min-width: 64px;
+      min-width: 76px;
       text-align: center;
-      font-size: 12px;
+      font-size: 14px;            /* up from 12px */
+      font-weight: 500;
       color: var(--text-muted);
       font-variant-numeric: tabular-nums;
     }
 
     #zoom-level {
-      min-width: 40px;
+      min-width: 48px;
       text-align: center;
-      font-size: 12px;
+      font-size: 14px;            /* up from 12px */
+      font-weight: 500;
       color: var(--text-muted);
       font-variant-numeric: tabular-nums;
     }
@@ -266,7 +271,7 @@
       flex-direction: column;
       align-items: center;
       background: var(--pdf-bg);
-      padding: 28px;
+      padding: 40px;              /* up from 28px */
     }
 
     #pdf-empty-state {
@@ -275,27 +280,27 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 10px;
-      color: #A1A1AA;
+      gap: 14px;
+      color: #6B7280;
       user-select: none;
       pointer-events: none;
     }
 
     #pdf-empty-state .icon {
-      font-size: 52px;
-      opacity: 0.4;
+      font-size: 72px;            /* up from 52px */
+      opacity: 0.5;
       filter: grayscale(1);
     }
 
     #pdf-empty-state h2 {
-      font-size: 16px;
-      font-weight: 500;
-      color: #71717A;
+      font-size: 22px;            /* up from 16px */
+      font-weight: 600;
+      color: #374151;
     }
 
     #pdf-empty-state p {
-      font-size: 12px;
-      color: #A1A1AA;
+      font-size: 15px;            /* up from 12px */
+      color: #6B7280;
     }
 
     #pdf-canvas {
@@ -309,33 +314,34 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 12px;
-      height: 24px;
+      padding: 0 14px;
+      height: 32px;               /* up from 24px */
       background: var(--status-bg);
       border-top: 1px solid var(--status-border);
       flex-shrink: 0;
-      font-size: 11px;
+      font-size: 13px;            /* up from 11px */
+      font-weight: 500;
       color: var(--text-faint);
       font-variant-numeric: tabular-nums;
     }
 
     #status-file { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    #status-msg { color: #059669; transition: opacity 0.3s; }
+    #status-msg { color: #047857; font-weight: 600; transition: opacity 0.3s; }
     #status-msg.hidden { opacity: 0; }
 
     /* ── Toast ── */
     #toast {
       position: fixed;
-      bottom: 36px;
-      right: 16px;
-      padding: 8px 16px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: 500;
+      bottom: 44px;
+      right: 20px;
+      padding: 12px 22px;         /* up from 8px 16px */
+      border-radius: 8px;
+      font-size: 14px;            /* up from 12px */
+      font-weight: 600;
       z-index: 9999;
       pointer-events: none;
       transition: opacity 0.2s ease, transform 0.2s ease;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15), 0 1px 3px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.18), 0 1px 4px rgba(0,0,0,0.1);
     }
     #toast.hidden  { opacity: 0; transform: translateY(6px); }
     #toast.success { background: var(--toast-success); color: #fff; opacity: 1; transform: translateY(0); }
