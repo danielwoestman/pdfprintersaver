@@ -478,6 +478,20 @@
     }
     .rotation-label.visible { display: inline-block; }
 
+    /* ── Save As button ── */
+    .action-btn.save-as-btn {
+      background: transparent;
+      color: var(--gray-600);
+      border-color: var(--gray-300);
+      font-weight: 500;
+    }
+    .action-btn.save-as-btn:hover:not(:disabled) {
+      background: var(--gray-100);
+      color: var(--gray-900);
+      border-color: var(--gray-400);
+    }
+    .action-btn.save-as-btn:disabled { opacity: 0.38; }
+
     /* ── Sign button ── */
     .action-btn.sign-btn {
       background: transparent;
@@ -678,6 +692,7 @@
           <button id="btn-email" class="action-btn email-btn" disabled>✉ Email ▾</button>
           <div id="email-dropdown" class="hidden"></div>
         </div>
+        <button id="btn-save-as"  class="action-btn save-as-btn"  disabled>💾 Save As</button>
         <button id="btn-sign"     class="action-btn sign-btn"     disabled>✍ Sign</button>
         <button id="btn-print"    class="action-btn print-btn"    disabled>🖨 Print</button>
         <button id="btn-settings" class="action-btn settings-btn">⚙ Settings</button>

@@ -62,6 +62,9 @@ async function init() {
     renderPage(currentPage);
   });
 
+  // Save As button
+  document.getElementById('btn-save-as').addEventListener('click', saveFileAs);
+
   // Sign button
   document.getElementById('btn-sign').addEventListener('click', openSignModal);
   document.getElementById('sign-cancel').addEventListener('click', closeSignModal);
@@ -108,6 +111,7 @@ function syncActionButtonState() {
   document.getElementById('btn-print').disabled   = !currentPath;
   document.getElementById('btn-rotate').disabled  = !currentPath;
   document.getElementById('btn-sign').disabled    = !currentPath;
+  document.getElementById('btn-save-as').disabled = !currentPath;
 }
 
 async function handleActionButton(index, buttonEl) {
@@ -364,6 +368,25 @@ function showStatus(message) {
   statusTimer = setTimeout(() => {
     statusMsg.classList.add('hidden');
   }, 4000);
+}
+
+// ── Save As ───────────────────────────────────────────────────────────────────
+
+async function saveFileAs() {
+  if (!currentPath) return;
+  const defaultName = currentPath.replace(/\\/g, '/').split('/').pop();
+  const destPath = await window.electronAPI.saveFileDialog(defaultName);
+  if (!destPath) return;
+
+  const result = await window.electronAPI.saveFileAs(
+    currentPath, destPath, displayRotation, pendingSignature
+  );
+
+  if (result.success) {
+    showStatus(`Saved → ${result.dest}`);
+  } else {
+    showToast(`✗ Save failed: ${result.error}`, 'error');
+  }
 }
 
 // ── Signature modal ───────────────────────────────────────────────────────────

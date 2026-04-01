@@ -135,6 +135,59 @@ function openSettingsWindow() {
 
 // ── IPC handlers ──────────────────────────────────────────────────────────────
 
+ipcMain.handle('dialog:saveFile', async (event, defaultName) => {
+  const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
+    title: 'Save PDF As',
+    defaultPath: defaultName,
+    filters: [{ name: 'PDF Documents', extensions: ['pdf'] }],
+  });
+  return canceled ? null : filePath;
+});
+
+ipcMain.handle('file:save-as', async (event, { src, destPath, rotation, signature }) => {
+  try {
+    if (!rotation && !signature) {
+      fs.copyFileSync(src, destPath);
+      return { success: true, dest: destPath };
+    }
+    const bytes = fs.readFileSync(src);
+    const doc = await PDFDocument.load(bytes);
+    doc.registerFontkit(fontkit);
+    const pages = doc.getPages();
+
+    if (rotation) {
+      for (const page of pages) {
+        const cur = page.getRotation().angle;
+        page.setRotation(degrees((cur + rotation) % 360));
+      }
+    }
+
+    if (signature) {
+      const nameFont = await doc.embedFont(StandardFonts.TimesRomanBoldItalic);
+      const helv     = await doc.embedFont(StandardFonts.Helvetica);
+      const lastPage = pages[pages.length - 1];
+      const { width } = lastPage.getSize();
+      const bW = 250, bH = 90, margin = 20;
+      const bX = width - bW - margin, bY = margin;
+
+      lastPage.drawRectangle({ x: bX, y: bY, width: bW, height: bH,
+        color: rgb(0.97, 0.97, 1), borderColor: rgb(0.4, 0.4, 0.65), borderWidth: 1 });
+      lastPage.drawText(signature.name, { x: bX + 10, y: bY + bH - 34,
+        font: nameFont, size: 18, color: rgb(0.08, 0.1, 0.45) });
+      lastPage.drawLine({ start: { x: bX + 10, y: bY + bH - 40 },
+        end: { x: bX + bW - 10, y: bY + bH - 40 }, thickness: 0.5, color: rgb(0.6, 0.6, 0.75) });
+      [`Date:    ${signature.date}`, `IP:      ${signature.ip}`, `Device:  ${signature.device}`]
+        .forEach((line, i) => lastPage.drawText(line, {
+          x: bX + 10, y: bY + bH - 54 - i * 13, font: helv, size: 8, color: rgb(0.3, 0.3, 0.4) }));
+    }
+
+    fs.writeFileSync(destPath, await doc.save());
+    return { success: true, dest: destPath };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
 ipcMain.handle('dialog:openFile', async () => {
   const { canceled, filePaths } = await dialog.showOpenDialog(mainWindow, {
     title: 'Open PDF',

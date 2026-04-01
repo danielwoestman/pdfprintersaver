@@ -4,10 +4,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // File dialogs
   openFile: () => ipcRenderer.invoke('dialog:openFile'),
   openFolder: () => ipcRenderer.invoke('dialog:openFolder'),
+  saveFileDialog: (defaultName) => ipcRenderer.invoke('dialog:saveFile', defaultName),
 
   // File operations
   readFile: (filePath) => ipcRenderer.invoke('file:read', filePath),
   copyFile: (src, destFolder) => ipcRenderer.invoke('file:copy', { src, destFolder }),
+  saveFileAs: (src, destPath, rotation, signature) =>
+    ipcRenderer.invoke('file:save-as', { src, destPath, rotation, signature }),
 
   // Settings
   getSettings: () => ipcRenderer.invoke('settings:get'),
