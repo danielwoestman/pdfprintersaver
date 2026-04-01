@@ -19,18 +19,21 @@ function getSettingsPath() {
 }
 
 function loadSettings() {
+  const defaults = {
+    buttons: Array.from({ length: 10 }, () => ({ label: '', folder: '' })),
+    defaultPrinter: '',
+    emailTemplates: Array.from({ length: 5 }, () => ({ label: '', toAddress: '', note: '' })),
+  };
   const file = getSettingsPath();
   if (fs.existsSync(file)) {
     try {
-      return JSON.parse(fs.readFileSync(file, 'utf-8'));
+      const saved = JSON.parse(fs.readFileSync(file, 'utf-8'));
+      return { ...defaults, ...saved };
     } catch (e) {
       console.error('Failed to parse settings.json:', e.message);
     }
   }
-  return {
-    buttons: Array.from({ length: 10 }, () => ({ label: '', folder: '' })),
-    defaultPrinter: '',
-  };
+  return defaults;
 }
 
 function saveSettings(settings) {
@@ -105,7 +108,7 @@ function openSettingsWindow() {
 
   settingsWindow = new BrowserWindow({
     width: 780,
-    height: 660,
+    height: 900,
     resizable: false,
     parent: mainWindow,
     modal: true,
@@ -222,6 +225,50 @@ ipcMain.handle('print:pdf', async (event, { filePath, printerName }) => {
       execFile('lp', ['-d', printerName, filePath],
         (err) => resolve(err ? { success: false, error: err.message } : { success: true }));
     }
+  });
+});
+
+// Escape a string for use inside a PowerShell double-quoted string literal
+function escapePsStr(str) {
+  return (str || '')
+    .replace(/`/g,    '``')   // backtick → ``
+    .replace(/"/g,    '`"')   // " → `"
+    .replace(/\$/g,   '`$')   // $ → `$ (prevent variable expansion)
+    .replace(/\r?\n/g, '`n'); // newlines → `n
+}
+
+// Open email with attachment via Outlook COM (Windows); falls back to mailto: if Outlook absent
+ipcMain.handle('email:open', async (event, { toAddress, filePath, note }) => {
+  const subject = `PDF: ${path.basename(filePath)}`;
+  const safePath    = escapePsStr(filePath.replace(/\\/g, '\\\\'));
+  const safeSubject = escapePsStr(subject);
+  const safeTo      = escapePsStr(toAddress);
+  const safeNote    = escapePsStr(note);
+
+  const ps = `
+try {
+  $ol   = New-Object -ComObject Outlook.Application
+  $mail = $ol.CreateItem(0)
+  $mail.Subject = "${safeSubject}"
+  ${safeTo      ? `$mail.To   = "${safeTo}"` : ''}
+  ${safeNote    ? `$mail.Body = "${safeNote}"` : ''}
+  $mail.Attachments.Add("${safePath}")
+  $mail.Display($false)
+} catch { exit 1 }
+`.trim();
+
+  return new Promise((resolve) => {
+    execFile('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', ps],
+      (err) => {
+        if (!err) return resolve({ success: true });
+        // Outlook not available — open mailto: without attachment
+        const mailtoUrl = (toAddress ? `mailto:${toAddress}` : 'mailto:')
+          + `?subject=${encodeURIComponent(subject)}`
+          + (note ? `&body=${encodeURIComponent(note)}` : '');
+        shell.openExternal(mailtoUrl)
+          .then(() => resolve({ success: true, fallback: true }))
+          .catch((e) => resolve({ success: false, error: e.message }));
+      });
   });
 });
 

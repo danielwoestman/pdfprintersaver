@@ -1,7 +1,8 @@
-// Settings window — configure the 10 action buttons + default printer
+// Settings window — configure the 10 action buttons, default printer, and email templates
 
-let workingButtons = [];
-let workingPrinter = '';
+let workingButtons       = [];
+let workingPrinter       = '';
+let workingEmailTemplates = [];
 
 // ── Custom confirm modal ──────────────────────────────────────────────────────
 
@@ -39,8 +40,17 @@ async function init() {
   workingButtons = settings.buttons.map(b => ({ label: b.label || '', folder: b.folder || '' }));
   while (workingButtons.length < 10) workingButtons.push({ label: '', folder: '' });
   workingPrinter = settings.defaultPrinter || '';
+  workingEmailTemplates = (settings.emailTemplates || []).map(t => ({
+    label:     t.label     || '',
+    toAddress: t.toAddress || '',
+    note:      t.note      || '',
+  }));
+  while (workingEmailTemplates.length < 5) {
+    workingEmailTemplates.push({ label: '', toAddress: '', note: '' });
+  }
   renderRows();
   await populatePrinters(workingPrinter);
+  renderEmailRows();
 }
 
 async function populatePrinters(selectedName) {
@@ -159,12 +169,126 @@ function renderRows() {
   });
 }
 
+// ── Email templates table ─────────────────────────────────────────────────────
+
+function renderEmailRows() {
+  const tbody = document.getElementById('email-body');
+  tbody.innerHTML = '';
+
+  workingEmailTemplates.forEach((tpl, i) => {
+    const tr = document.createElement('tr');
+
+    // # column
+    const tdNum = document.createElement('td');
+    tdNum.className = 'col-email-num';
+    tdNum.textContent = String(i + 1);
+    tr.appendChild(tdNum);
+
+    // Label column
+    const tdLabel = document.createElement('td');
+    tdLabel.className = 'col-email-label';
+    const labelInput = document.createElement('input');
+    labelInput.type = 'text';
+    labelInput.placeholder = 'e.g. Invoice Approval';
+    labelInput.value = tpl.label;
+    labelInput.maxLength = 30;
+    labelInput.addEventListener('input', () => {
+      workingEmailTemplates[i].label = labelInput.value.trim();
+    });
+    tdLabel.appendChild(labelInput);
+    tr.appendChild(tdLabel);
+
+    // Recipient email column
+    const tdTo = document.createElement('td');
+    tdTo.className = 'col-email-to';
+    const toInput = document.createElement('input');
+    toInput.type = 'text';
+    toInput.placeholder = 'approver@company.com';
+    toInput.value = tpl.toAddress;
+    toInput.maxLength = 100;
+    toInput.setAttribute('spellcheck', 'false');
+    toInput.addEventListener('input', () => {
+      workingEmailTemplates[i].toAddress = toInput.value.trim();
+    });
+    tdTo.appendChild(toInput);
+    tr.appendChild(tdTo);
+
+    // Note button column
+    const tdNote = document.createElement('td');
+    tdNote.className = 'col-email-note';
+    const noteBtn = document.createElement('button');
+    noteBtn.className = 'btn-note' + (tpl.note ? ' has-note' : '');
+    noteBtn.textContent = tpl.note ? '✎ Edit' : '+ Note';
+    noteBtn.addEventListener('click', async () => {
+      const saved = await showNoteModal(i, workingEmailTemplates[i].note);
+      if (saved !== null) {
+        workingEmailTemplates[i].note = saved;
+        noteBtn.textContent = saved ? '✎ Edit' : '+ Note';
+        noteBtn.className = 'btn-note' + (saved ? ' has-note' : '');
+      }
+    });
+    tdNote.appendChild(noteBtn);
+    tr.appendChild(tdNote);
+
+    tbody.appendChild(tr);
+  });
+}
+
+// ── Note modal ────────────────────────────────────────────────────────────────
+
+function showNoteModal(index, currentNote) {
+  return new Promise((resolve) => {
+    const overlay   = document.getElementById('note-overlay');
+    const title     = document.getElementById('note-modal-title');
+    const textarea  = document.getElementById('note-textarea');
+    const charCount = document.getElementById('note-char-count');
+    const saveBtn   = document.getElementById('note-save');
+    const cancelBtn = document.getElementById('note-cancel');
+
+    const label = workingEmailTemplates[index].label || `Template ${index + 1}`;
+    title.textContent = `Note — ${label}`;
+    textarea.value = currentNote;
+    charCount.textContent = `${currentNote.length} / 500`;
+    overlay.classList.add('visible');
+    textarea.focus();
+
+    function updateCount() {
+      charCount.textContent = `${textarea.value.length} / 500`;
+    }
+    textarea.addEventListener('input', updateCount);
+
+    function finish(result) {
+      overlay.classList.remove('visible');
+      textarea.removeEventListener('input', updateCount);
+      saveBtn.removeEventListener('click', onSave);
+      cancelBtn.removeEventListener('click', onCancel);
+      resolve(result);
+    }
+
+    const onSave   = () => finish(textarea.value.trim());
+    const onCancel = () => finish(null);
+
+    saveBtn.addEventListener('click', onSave);
+    cancelBtn.addEventListener('click', onCancel);
+
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) finish(null);
+    }, { once: true });
+  });
+}
+
+// ── Save ──────────────────────────────────────────────────────────────────────
+
 document.getElementById('btn-save').addEventListener('click', async () => {
   const statusEl = document.getElementById('save-status');
   statusEl.textContent = 'Saving…';
   statusEl.className = '';
 
-  const result = await window.electronAPI.saveSettings({ buttons: workingButtons, defaultPrinter: workingPrinter });
+  const result = await window.electronAPI.saveSettings({
+    buttons: workingButtons,
+    defaultPrinter: workingPrinter,
+    emailTemplates: workingEmailTemplates,
+  });
 
   if (result.success) {
     statusEl.textContent = '✓ Saved';

@@ -5,57 +5,68 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PDF Printer Saver</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --app-bg: #F4F4F5;
-      --toolbar-bg: #FFFFFF;
-      --toolbar-border: #D1D5DB;  /* slightly darker border — easier to see */
-      --text: #111827;
-      --text-muted: #374151;      /* darkened from #6B7280 — WCAG AA on white */
-      --text-faint: #4B5563;      /* darkened from #9CA3AF — readable status bar */
+      /* Tailwind / Flowbite color tokens */
+      --gray-50:  #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-300: #d1d5db;
+      --gray-400: #9ca3af;
+      --gray-500: #6b7280;
+      --gray-600: #4b5563;
+      --gray-700: #374151;
+      --gray-900: #111827;
 
-      /* Nav buttons */
-      --nav-btn-bg: #F4F4F5;
-      --nav-btn-hover: #E4E4E7;
-      --nav-btn-active: #D4D4D8;
-      --nav-btn-border: #D1D5DB;
+      --blue-50:  #eff6ff;
+      --blue-100: #dbeafe;
+      --blue-200: #bfdbfe;
+      --blue-600: #2563eb;
+      --blue-700: #1d4ed8;
+      --blue-800: #1e40af;
 
-      /* Open PDF primary */
-      --primary: #1D4ED8;         /* slightly deeper blue — higher contrast */
-      --primary-hover: #1E40AF;
+      --violet-600: #7c3aed;
+      --violet-700: #6d28d9;
 
-      /* Tab action buttons */
-      --tab-bg: #FFFFFF;
-      --tab-border: #D1D5DB;
-      --tab-hover: #F4F4F5;
-      --tab-active-bg: #EFF6FF;
-      --tab-active-border: #93C5FD;
-      --tab-active-text: #1D4ED8;
-      --tab-unconfigured-bg: #FAFAFA;
-      --tab-unconfigured-text: #6B7280;
+      --green-700: #047857;
+      --red-700:   #b91c1c;
 
-      /* Print & Settings */
-      --print-bg: #6D28D9;        /* slightly deeper purple */
-      --print-hover: #5B21B6;
+      /* Semantic aliases */
+      --surface:        #ffffff;
+      --app-bg:         var(--gray-100);
+      --toolbar-bg:     var(--surface);
+      --toolbar-border: var(--gray-200);
+      --text:           var(--gray-900);
+      --text-muted:     var(--gray-600);
+      --text-faint:     var(--gray-500);
 
-      /* Canvas */
-      --pdf-bg: #D1D5DB;          /* slightly darker surround = more contrast with white page */
-      --canvas-shadow: 0 4px 24px rgba(0,0,0,0.18), 0 1px 6px rgba(0,0,0,0.10);
+      --primary:        var(--blue-700);
+      --primary-hover:  var(--blue-800);
 
-      /* Status */
-      --status-bg: #F9FAFB;
-      --status-border: #D1D5DB;
+      --print-bg:       var(--violet-600);
+      --print-hover:    var(--violet-700);
 
-      /* Toast */
-      --toast-success: #047857;
-      --toast-error: #B91C1C;
+      --pdf-bg:         #cbd5e1;   /* slate-300 — neutral surround */
+      --canvas-shadow:  0 4px 24px rgba(0,0,0,0.16), 0 1px 6px rgba(0,0,0,0.08);
+
+      --status-bg:      var(--gray-50);
+      --status-border:  var(--gray-200);
+
+      --toast-success:  var(--green-700);
+      --toast-error:    var(--red-700);
+
+      --radius-sm: 6px;
+      --radius:    8px;   /* Flowbite rounded-lg */
+      --radius-xl: 12px;
     }
 
     html, body {
       height: 100%;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-      font-size: 15px;            /* up from 13px */
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      font-size: 14px;
       background: var(--app-bg);
       color: var(--text);
       overflow: hidden;
@@ -73,12 +84,13 @@
       display: flex;
       align-items: center;
       gap: 4px;
-      padding: 8px 12px;          /* up from 6px 10px */
+      padding: 10px 14px;
       background: var(--toolbar-bg);
       border-bottom: 1px solid var(--toolbar-border);
       flex-shrink: 0;
-      min-height: 56px;           /* up from implicit ~44px */
+      min-height: 58px;
       -webkit-app-region: drag;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     }
 
     #nav-toolbar > * { -webkit-app-region: no-drag; }
@@ -87,15 +99,14 @@
     #action-toolbar {
       display: flex;
       align-items: center;
-      padding: 0 12px;
+      padding: 0 14px;
       background: var(--toolbar-bg);
       border-bottom: 1px solid var(--toolbar-border);
       flex-shrink: 0;
-      height: 52px;               /* up from 40px */
+      height: 52px;
       gap: 8px;
     }
 
-    /* Scrollable tab strip */
     #action-buttons-wrap {
       flex: 1;
       min-width: 0;
@@ -107,7 +118,7 @@
 
     #action-buttons {
       display: flex;
-      gap: 4px;                   /* up from 2px */
+      gap: 5px;
       overflow-x: auto;
       scrollbar-width: none;
       -ms-overflow-style: none;
@@ -116,13 +127,10 @@
     }
     #action-buttons::-webkit-scrollbar { display: none; }
 
-    /* Fade-out gradient on right edge when overflowing */
     #action-buttons-wrap::after {
       content: '';
       position: absolute;
-      right: 0;
-      top: 0;
-      bottom: 0;
+      right: 0; top: 0; bottom: 0;
       width: 40px;
       background: linear-gradient(to right, transparent, var(--toolbar-bg));
       pointer-events: none;
@@ -134,136 +142,204 @@
       flex-shrink: 0;
     }
 
-    /* ── Nav toolbar buttons — 44px minimum touch target ── */
+    /* ── Toolbar buttons (nav bar) ── */
     .toolbar-btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 5px;
-      min-height: 40px;           /* WCAG minimum */
-      padding: 8px 13px;          /* up from 4px 9px */
-      background: var(--nav-btn-bg);
-      color: var(--text);
-      border: 1px solid var(--nav-btn-border);
-      border-radius: 6px;
+      gap: 6px;
+      min-height: 40px;
+      padding: 0 14px;
+      background: var(--gray-100);
+      color: var(--gray-700);
+      border: 1px solid var(--gray-300);
+      border-radius: var(--radius);
       cursor: pointer;
-      font-size: 14px;            /* up from 12px */
+      font-size: 14px;
       font-family: inherit;
+      font-weight: 500;
       white-space: nowrap;
-      transition: background 0.1s, border-color 0.1s;
+      transition: background 0.12s, border-color 0.12s, color 0.12s;
       line-height: 1;
+      letter-spacing: -0.01em;
     }
     .toolbar-btn:hover:not(:disabled) {
-      background: var(--nav-btn-hover);
-      border-color: #9CA3AF;
+      background: var(--gray-200);
+      border-color: var(--gray-400);
+      color: var(--gray-900);
     }
-    .toolbar-btn:active:not(:disabled) { background: var(--nav-btn-active); }
-    .toolbar-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .toolbar-btn:active:not(:disabled) { background: var(--gray-300); }
+    .toolbar-btn:focus-visible {
+      outline: 2px solid var(--blue-600);
+      outline-offset: 1px;
+    }
+    .toolbar-btn:disabled { opacity: 0.38; cursor: not-allowed; }
 
     .toolbar-btn.primary {
       background: var(--primary);
       color: #fff;
       border-color: transparent;
-      font-weight: 600;           /* bolder */
-      padding: 8px 18px;
+      font-weight: 600;
+      padding: 0 20px;
+      letter-spacing: -0.01em;
     }
     .toolbar-btn.primary:hover:not(:disabled) {
       background: var(--primary-hover);
     }
+    .toolbar-btn.primary:focus-visible { outline-color: var(--blue-200); }
 
-    /* ── Tab action buttons ── */
+    /* ── Save action buttons (scrollable strip) ── */
     .action-btn {
       display: inline-flex;
       align-items: center;
-      min-height: 38px;           /* tall enough to hit easily */
-      padding: 8px 16px;          /* up from 4px 11px */
-      background: var(--tab-bg);
-      color: var(--text);
-      border: 1px solid var(--tab-border);
-      border-radius: 6px;
+      min-height: 36px;
+      padding: 0 14px;
+      background: var(--surface);
+      color: var(--gray-700);
+      border: 1px solid var(--gray-300);
+      border-radius: var(--radius);
       cursor: pointer;
-      font-size: 14px;            /* up from 12px */
-      font-weight: 600;           /* bolder — easier to read label */
+      font-size: 13px;
+      font-weight: 500;
       font-family: inherit;
       white-space: nowrap;
-      transition: background 0.1s, border-color 0.1s, color 0.1s;
-      line-height: 1.3;
+      transition: background 0.12s, border-color 0.12s, color 0.12s, box-shadow 0.12s;
       flex-shrink: 0;
+      letter-spacing: -0.01em;
     }
     .action-btn:hover:not(:disabled) {
-      background: var(--tab-hover);
-      border-color: #9CA3AF;
+      background: var(--gray-50);
+      border-color: var(--gray-400);
+      color: var(--gray-900);
     }
     .action-btn:active:not(:disabled) {
-      background: var(--tab-active-bg);
-      border-color: var(--tab-active-border);
-      color: var(--tab-active-text);
+      background: var(--blue-50);
+      border-color: var(--blue-200);
+      color: var(--blue-700);
+    }
+    .action-btn:focus-visible {
+      outline: 2px solid var(--blue-600);
+      outline-offset: 1px;
     }
     .action-btn:disabled { cursor: not-allowed; }
 
     .action-btn.unconfigured {
-      background: var(--tab-unconfigured-bg);
-      color: var(--tab-unconfigured-text);
+      background: var(--gray-50);
+      color: var(--gray-400);
       font-weight: 400;
       font-style: italic;
       border-style: dashed;
     }
 
+    /* Print button — violet/purple Flowbite variant */
     .action-btn.print-btn {
       background: var(--print-bg);
       color: #fff;
       border-color: transparent;
-      font-style: normal;
+      font-weight: 600;
     }
-    .action-btn.print-btn:hover:not(:disabled) {
-      background: var(--print-hover);
-    }
-    .action-btn.print-btn:disabled {
-      background: #A78BFA;
-      color: #fff;
-    }
+    .action-btn.print-btn:hover:not(:disabled) { background: var(--print-hover); }
+    .action-btn.print-btn:disabled { background: #a78bfa; color: #fff; opacity: 1; }
 
+    /* Settings button — ghost */
     .action-btn.settings-btn {
-      background: var(--nav-btn-bg);
-      color: var(--text-muted);
-      border-color: var(--nav-btn-border);
-      font-style: normal;
+      background: transparent;
+      color: var(--gray-500);
+      border-color: var(--gray-300);
       font-weight: 400;
     }
     .action-btn.settings-btn:hover {
-      background: var(--nav-btn-hover);
-      color: var(--text);
+      background: var(--gray-100);
+      color: var(--gray-700);
+      border-color: var(--gray-400);
+    }
+
+    /* Email button — matches settings ghost style */
+    .action-btn.email-btn {
+      background: transparent;
+      color: var(--gray-600);
+      border-color: var(--gray-300);
+      font-weight: 500;
+    }
+    .action-btn.email-btn:hover:not(:disabled) {
+      background: var(--gray-100);
+      color: var(--gray-900);
+      border-color: var(--gray-400);
+    }
+    .action-btn.email-btn:disabled { opacity: 0.38; }
+
+    /* ── Email dropdown — Flowbite dropdown component ── */
+    #email-dropdown-wrap { position: relative; }
+
+    #email-dropdown {
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      background: var(--surface);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
+      min-width: 200px;
+      z-index: 200;
+      overflow: hidden;
+      padding: 4px 0;
+    }
+    #email-dropdown.hidden { display: none; }
+
+    .email-drop-item {
+      display: block;
+      width: 100%;
+      padding: 9px 16px;
+      text-align: left;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      font-family: inherit;
+      font-weight: 500;
+      color: var(--gray-700);
+      white-space: nowrap;
+      min-height: unset;
+      transition: background 0.1s;
+    }
+    .email-drop-item:hover { background: var(--gray-50); color: var(--gray-900); }
+
+    .email-drop-empty {
+      padding: 9px 16px;
+      font-size: 13px;
+      color: var(--gray-400);
+      font-style: italic;
     }
 
     /* ── Separator ── */
     .sep {
       width: 1px;
-      height: 22px;               /* up from 16px */
-      background: var(--toolbar-border);
+      height: 20px;
+      background: var(--gray-200);
       margin: 0 6px;
       flex-shrink: 0;
     }
 
     /* ── Page info / zoom label ── */
     #page-info {
-      min-width: 76px;
+      min-width: 74px;
       text-align: center;
-      font-size: 14px;            /* up from 12px */
+      font-size: 13px;
       font-weight: 500;
-      color: var(--text-muted);
+      color: var(--gray-600);
       font-variant-numeric: tabular-nums;
     }
 
     #zoom-level {
-      min-width: 48px;
+      min-width: 46px;
       text-align: center;
-      font-size: 14px;            /* up from 12px */
+      font-size: 13px;
       font-weight: 500;
-      color: var(--text-muted);
+      color: var(--gray-600);
       font-variant-numeric: tabular-nums;
     }
 
-    /* ── PDF area ── */
+    /* ── PDF canvas area ── */
     #pdf-container {
       flex: 1;
       overflow: auto;
@@ -271,7 +347,7 @@
       flex-direction: column;
       align-items: center;
       background: var(--pdf-bg);
-      padding: 40px;              /* up from 28px */
+      padding: 40px;
     }
 
     #pdf-empty-state {
@@ -280,108 +356,124 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 14px;
-      color: #6B7280;
+      gap: 12px;
       user-select: none;
       pointer-events: none;
     }
 
+    /* Flowbite-style empty state card */
+    #pdf-empty-state-inner {
+      background: var(--surface);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-xl);
+      padding: 48px 56px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+
     #pdf-empty-state .icon {
-      font-size: 72px;            /* up from 52px */
-      opacity: 0.5;
-      filter: grayscale(1);
+      font-size: 52px;
+      opacity: 0.45;
+      filter: grayscale(0.6);
+      margin-bottom: 4px;
     }
 
     #pdf-empty-state h2 {
-      font-size: 22px;            /* up from 16px */
+      font-size: 18px;
       font-weight: 600;
-      color: #374151;
+      color: var(--gray-700);
+      letter-spacing: -0.02em;
     }
 
     #pdf-empty-state p {
-      font-size: 15px;            /* up from 12px */
-      color: #6B7280;
+      font-size: 14px;
+      color: var(--gray-500);
+      text-align: center;
+      line-height: 1.6;
     }
 
     #pdf-canvas {
       display: none;
       box-shadow: var(--canvas-shadow);
       background: white;
+      border-radius: 2px;
     }
 
-    /* ── Status bar ── */
+    /* ── Status bar — Flowbite footer style ── */
     #status-bar {
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 0 14px;
-      height: 32px;               /* up from 24px */
+      height: 30px;
       background: var(--status-bg);
       border-top: 1px solid var(--status-border);
       flex-shrink: 0;
-      font-size: 13px;            /* up from 11px */
+      font-size: 12px;
       font-weight: 500;
       color: var(--text-faint);
       font-variant-numeric: tabular-nums;
+      letter-spacing: 0.01em;
     }
 
     #status-file { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    #status-msg { color: #047857; font-weight: 600; transition: opacity 0.3s; }
+    #status-msg { color: var(--green-700); font-weight: 600; transition: opacity 0.3s; }
     #status-msg.hidden { opacity: 0; }
 
-    /* ── Toast ── */
+    /* ── Toast — Flowbite alert style ── */
     #toast {
       position: fixed;
       bottom: 44px;
       right: 20px;
-      padding: 12px 22px;         /* up from 8px 16px */
-      border-radius: 8px;
-      font-size: 14px;            /* up from 12px */
+      padding: 12px 20px;
+      border-radius: var(--radius);
+      font-size: 13px;
       font-weight: 600;
       z-index: 9999;
       pointer-events: none;
       transition: opacity 0.2s ease, transform 0.2s ease;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.18), 0 1px 4px rgba(0,0,0,0.1);
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
+      max-width: 360px;
+      line-height: 1.4;
     }
-    #toast.hidden  { opacity: 0; transform: translateY(6px); }
+    #toast.hidden  { opacity: 0; transform: translateY(8px); }
     #toast.success { background: var(--toast-success); color: #fff; opacity: 1; transform: translateY(0); }
     #toast.error   { background: var(--toast-error);   color: #fff; opacity: 1; transform: translateY(0); }
 
-    /* ── Button popup (appears just below the clicked action button) ── */
+    /* ── Save confirmation popup (below clicked button) ── */
     #action-popup {
       position: fixed;
       z-index: 9999;
-      padding: 7px 16px;
-      border-radius: 7px;
-      font-size: 14px;
+      padding: 6px 14px;
+      border-radius: var(--radius);
+      font-size: 13px;
       font-weight: 600;
       pointer-events: none;
       white-space: nowrap;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.18);
-      transition: opacity 0.2s ease, transform 0.2s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      transition: opacity 0.18s ease, transform 0.18s ease;
       transform: translateX(-50%) translateY(0);
-      /* caret color driven by per-instance custom property */
-      --popup-bg: #047857;
+      --popup-bg: var(--green-700);
       background: var(--popup-bg);
       color: #fff;
     }
     #action-popup.hidden {
       opacity: 0;
-      transform: translateX(-50%) translateY(4px);
+      transform: translateX(-50%) translateY(5px);
     }
-    #action-popup.error { --popup-bg: #B91C1C; }
-    /* upward-pointing caret */
+    #action-popup.error { --popup-bg: var(--red-700); }
     #action-popup::before {
       content: '';
       position: absolute;
-      top: -7px;
+      top: -6px;
       left: 50%;
       transform: translateX(-50%);
-      width: 0;
-      height: 0;
-      border-left: 7px solid transparent;
-      border-right: 7px solid transparent;
-      border-bottom: 7px solid var(--popup-bg);
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-bottom: 6px solid var(--popup-bg);
     }
   </style>
 </head>
@@ -408,6 +500,10 @@
         <div id="action-buttons"><!-- populated by renderer.js --></div>
       </div>
       <div id="fixed-buttons">
+        <div id="email-dropdown-wrap">
+          <button id="btn-email" class="action-btn email-btn" disabled>✉ Email ▾</button>
+          <div id="email-dropdown" class="hidden"></div>
+        </div>
         <button id="btn-print"    class="action-btn print-btn"    disabled>🖨 Print</button>
         <button id="btn-settings" class="action-btn settings-btn">⚙ Settings</button>
       </div>
@@ -416,9 +512,11 @@
     <!-- PDF display area -->
     <div id="pdf-container">
       <div id="pdf-empty-state">
-        <div class="icon">📄</div>
-        <h2>No PDF open</h2>
-        <p>Use <strong>File › Open PDF…</strong> or click <strong>Open PDF</strong> above</p>
+        <div id="pdf-empty-state-inner">
+          <div class="icon">📄</div>
+          <h2>No PDF open</h2>
+          <p>Use <strong>File › Open PDF…</strong> or click <strong>Open PDF</strong> above</p>
+        </div>
       </div>
       <canvas id="pdf-canvas"></canvas>
     </div>

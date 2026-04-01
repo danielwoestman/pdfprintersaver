@@ -17,6 +17,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   openSettings: () => ipcRenderer.send('window:openSettings'),
   printPDF: (filePath, printerName) => ipcRenderer.invoke('print:pdf', { filePath, printerName }),
   getPrinters: () => ipcRenderer.invoke('printers:get'),
+  emailPDF: (toAddress, filePath, note) => ipcRenderer.invoke('email:open', { toAddress, filePath, note }),
 
   // Events from main process → renderer
   onMenuOpenFile: (cb) => ipcRenderer.on('menu:openFile', cb),

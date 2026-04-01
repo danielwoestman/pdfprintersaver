@@ -68,6 +68,8 @@ function syncActionButtonState() {
     const configured = !!(btn?.label && btn?.folder);
     el.disabled = !configured || !currentPath;
   });
+  const hasEmailTemplate = (settings.emailTemplates || []).some(t => t.label && t.toAddress);
+  document.getElementById('btn-email').disabled = !currentPath || !hasEmailTemplate;
   document.getElementById('btn-print').disabled = !currentPath;
 }
 
@@ -188,6 +190,50 @@ document.getElementById('btn-zoom-fit').addEventListener('click', async () => {
   const fit        = (container.clientWidth - 48) / natural.width;
   changeZoom(fit);
 });
+
+// ── Email dropdown ────────────────────────────────────────────────────────────
+
+const emailDropdown = document.getElementById('email-dropdown');
+
+function renderEmailDropdown() {
+  emailDropdown.innerHTML = '';
+  const templates = (settings.emailTemplates || []).filter(t => t.label && t.toAddress);
+
+  if (templates.length === 0) {
+    const msg = document.createElement('div');
+    msg.className = 'email-drop-empty';
+    msg.textContent = 'No templates configured';
+    emailDropdown.appendChild(msg);
+    return;
+  }
+
+  templates.forEach((t) => {
+    const item = document.createElement('button');
+    item.className = 'email-drop-item';
+    item.textContent = t.label;
+    item.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      emailDropdown.classList.add('hidden');
+      const result = await window.electronAPI.emailPDF(t.toAddress, currentPath, t.note || '');
+      if (!result.success) {
+        showToast('✗ No email client found — set a default email app in your system settings.', 'error');
+      } else if (result.fallback) {
+        showToast('⚠ Outlook not found — email opened without attachment', 'error');
+      }
+    });
+    emailDropdown.appendChild(item);
+  });
+}
+
+document.getElementById('btn-email').addEventListener('click', (e) => {
+  if (!currentPath) return;
+  e.stopPropagation();
+  renderEmailDropdown();
+  emailDropdown.classList.toggle('hidden');
+});
+
+// Close dropdown when clicking anywhere else
+document.addEventListener('click', () => emailDropdown.classList.add('hidden'));
 
 document.getElementById('btn-print').addEventListener('click', async () => {
   if (!currentPath) return;

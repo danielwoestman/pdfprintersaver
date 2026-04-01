@@ -4,218 +4,265 @@
   <meta charset="UTF-8" />
   <title>Settings — Configure Buttons</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #f9fafb;
-      --surface: #fff;
-      --border: #e5e7eb;
-      --text: #111827;
-      --text-muted: #6b7280;
-      --primary: #2563eb;
-      --primary-hover: #1d4ed8;
-      --danger: #dc2626;
-      --row-alt: #f3f4f6;
-      --input-border: #d1d5db;
-      --input-focus: #2563eb;
+      /* Tailwind / Flowbite tokens */
+      --gray-50:  #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-300: #d1d5db;
+      --gray-400: #9ca3af;
+      --gray-500: #6b7280;
+      --gray-600: #4b5563;
+      --gray-700: #374151;
+      --gray-900: #111827;
+
+      --blue-50:  #eff6ff;
+      --blue-100: #dbeafe;
+      --blue-200: #bfdbfe;
+      --blue-600: #2563eb;
+      --blue-700: #1d4ed8;
+
+      --red-100: #fee2e2;
+      --red-300: #fca5a5;
+      --red-600: #dc2626;
+      --red-700: #b91c1c;
+
+      --green-700: #047857;
+
+      /* Semantic */
+      --bg:           var(--gray-50);
+      --surface:      #ffffff;
+      --border:       var(--gray-200);
+      --text:         var(--gray-900);
+      --text-muted:   var(--gray-500);
+      --primary:      var(--blue-700);
+      --primary-hover: #1e40af;
+      --danger:       var(--red-600);
+      --row-alt:      var(--gray-50);
+
+      --radius:    8px;
+      --radius-xl: 12px;
     }
 
     html, body {
       height: 100%;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      font-size: 15px;            /* up from 13px */
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      font-size: 14px;
       background: var(--bg);
       color: var(--text);
       -webkit-font-smoothing: antialiased;
     }
 
+    /* ── Layout ── */
     #settings-wrap {
       display: flex;
       flex-direction: column;
       height: 100vh;
-      padding: 16px 20px;
-      gap: 12px;
+      padding: 20px 24px 16px;
+      gap: 14px;
+      overflow: hidden;
     }
 
-    h1 {
-      font-size: 20px;            /* up from 16px */
+    /* Page header */
+    .page-header h1 {
+      font-size: 18px;
       font-weight: 700;
       color: var(--text);
+      letter-spacing: -0.02em;
     }
 
-    p.subtitle {
-      font-size: 14px;            /* up from 12px */
+    .page-header p {
+      font-size: 13px;
       color: var(--text-muted);
-      margin-top: 4px;
+      margin-top: 3px;
     }
 
-    /* ── Table ── */
+    /* ── Flowbite card ── */
+    .fb-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .fb-card-header {
+      padding: 14px 20px 12px;
+      border-bottom: 1px solid var(--border);
+      background: var(--gray-50);
+    }
+
+    .fb-card-header h2 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--gray-700);
+      letter-spacing: -0.01em;
+    }
+
+    .fb-card-header p {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+      line-height: 1.5;
+    }
+
+    .fb-card-body {
+      padding: 16px 20px;
+    }
+
+    /* ── Save buttons table ── */
     .table-wrap {
       flex: 1;
-      overflow-y: auto;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      background: var(--surface);
+      overflow-y: auto !important;
+      min-height: 0;
     }
 
+    /* ── Flowbite table ── */
     table {
       width: 100%;
       border-collapse: collapse;
+      font-size: 14px;
     }
 
     thead th {
       position: sticky;
       top: 0;
-      background: #f3f4f6;
-      padding: 10px 12px;         /* up from 8px 10px */
+      background: var(--gray-100);
+      padding: 10px 14px;
       text-align: left;
-      font-size: 12px;            /* up from 11px */
+      font-size: 11px;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--text-muted);
+      letter-spacing: 0.07em;
+      color: var(--gray-500);
       border-bottom: 1px solid var(--border);
+      white-space: nowrap;
     }
 
-    tbody tr:nth-child(even) { background: var(--row-alt); }
-    tbody tr:hover { background: #eff6ff; }
+    tbody tr { border-bottom: 1px solid var(--border); }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:nth-child(even) { background: var(--gray-50); }
+    tbody tr:hover { background: var(--blue-50); }
 
     td {
-      padding: 10px 12px;         /* up from 7px 10px */
+      padding: 10px 14px;
       vertical-align: middle;
-      border-bottom: 1px solid var(--border);
     }
-
-    td:last-child { border-bottom: none; }
-    tr:last-child td { border-bottom: none; }
 
     .col-num {
       width: 40px;
       text-align: center;
-      font-weight: 700;
-      color: var(--text-muted);
-      font-size: 14px;            /* up from 12px */
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-400);
     }
 
-    .col-label { width: 180px; }
+    .col-label { width: 175px; }
     .col-folder { }
-    .col-browse {
-      width: 210px;
-      white-space: nowrap;
-    }
-    .col-browse .btn-group {
-      display: flex;
-      gap: 6px;
-      justify-content: flex-end;
-    }
+    .col-browse { width: 215px; white-space: nowrap; }
+    .col-browse .btn-group { display: flex; gap: 6px; justify-content: flex-end; }
 
-    input[type="text"] {
+    /* ── Flowbite form inputs ── */
+    input[type="text"],
+    input[type="email"] {
       width: 100%;
-      padding: 7px 10px;          /* up from 4px 8px */
-      border: 1px solid var(--input-border);
-      border-radius: 6px;
+      padding: 8px 10px;
+      border: 1px solid var(--gray-300);
+      border-radius: var(--radius);
       font-family: inherit;
-      font-size: 14px;            /* up from 12px */
+      font-size: 13px;
       color: var(--text);
-      background: #fff;
+      background: var(--surface);
       outline: none;
-      transition: border-color 0.15s;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      line-height: 1.4;
     }
 
-    input[type="text"]:focus {
-      border-color: var(--input-focus);
-      box-shadow: 0 0 0 3px rgba(29,78,216,0.15);
+    input[type="text"]:focus,
+    input[type="email"]:focus {
+      border-color: var(--blue-600);
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
     }
 
     .folder-display {
-      font-size: 13px;            /* up from 11px */
-      color: var(--text-muted);
+      font-size: 12px;
+      color: var(--gray-400);
       font-family: 'Consolas', 'Courier New', monospace;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      max-width: 280px;
+      max-width: 290px;
     }
+    .folder-display.set { color: var(--gray-700); font-weight: 500; }
 
-    .folder-display.set { color: var(--text); font-weight: 500; }
-
-    /* ── Buttons — 44px minimum touch target ── */
+    /* ── Flowbite buttons ── */
     button {
-      min-height: 38px;           /* accessibility minimum */
-      padding: 8px 16px;          /* up from 5px 12px */
-      border-radius: 6px;
+      min-height: 36px;
+      padding: 0 16px;
+      border-radius: var(--radius);
       border: 1px solid transparent;
       cursor: pointer;
       font-family: inherit;
-      font-size: 14px;            /* up from 12px */
+      font-size: 13px;
       font-weight: 600;
-      transition: background 0.15s;
+      transition: background 0.12s, border-color 0.12s, color 0.12s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
     }
 
+    button:focus-visible {
+      outline: 2px solid var(--blue-600);
+      outline-offset: 2px;
+    }
+
+    /* Secondary / default */
     .btn-browse {
-      background: #f3f4f6;
-      color: var(--text);
-      border-color: var(--border);
+      background: var(--surface);
+      color: var(--gray-700);
+      border-color: var(--gray-300);
+      font-weight: 500;
     }
-    .btn-browse:hover { background: #e5e7eb; }
+    .btn-browse:hover { background: var(--gray-100); border-color: var(--gray-400); }
 
+    /* Danger / destructive */
     .btn-clear {
-      background: #fff5f5;
-      color: var(--danger);
-      border-color: #fecaca;
+      background: var(--surface);
+      color: var(--red-600);
+      border-color: var(--red-300);
+      font-weight: 500;
     }
-    .btn-clear:hover:not(:disabled) { background: #fee2e2; border-color: #fca5a5; }
+    .btn-clear:hover:not(:disabled) {
+      background: var(--red-100);
+      border-color: var(--red-600);
+    }
     .btn-clear:disabled { opacity: 0.35; cursor: not-allowed; }
 
-    /* ── Footer ── */
-    .footer {
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-      padding-top: 4px;
-    }
-
-    .btn-cancel {
+    /* Note button */
+    .btn-note {
       background: var(--surface);
-      color: var(--text);
-      border-color: var(--border);
-    }
-    .btn-cancel:hover { background: var(--row-alt); }
-
-    .btn-save {
-      background: var(--primary);
-      color: #fff;
-      padding: 8px 24px;          /* extra wide — primary action */
-    }
-    .btn-save:hover { background: var(--primary-hover); }
-
-    #save-status {
-      font-size: 14px;            /* up from 12px */
+      color: var(--gray-500);
+      border-color: var(--gray-300);
+      font-size: 12px;
       font-weight: 500;
-      color: var(--text-muted);
-      align-self: center;
-      margin-right: auto;
+      padding: 0 12px;
+      min-height: 32px;
     }
-    #save-status.ok { color: #047857; }
-    #save-status.err { color: var(--danger); }
+    .btn-note:hover { background: var(--gray-100); color: var(--gray-700); border-color: var(--gray-400); }
+    .btn-note.has-note {
+      background: var(--blue-50);
+      color: var(--blue-700);
+      border-color: var(--blue-200);
+    }
 
-    /* ── Printer section ── */
+    /* ── Printer / config card row ── */
     .printer-section {
-      padding: 18px 20px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-    }
-
-    .printer-section h2 {
-      font-size: 16px;
-      font-weight: 700;
-      margin-bottom: 4px;
-    }
-
-    .printer-section .subtitle {
-      margin-top: 0;
-      margin-bottom: 14px;
+      /* replaced by fb-card pattern — keep as alias */
     }
 
     .printer-row {
@@ -227,50 +274,157 @@
     .printer-row select {
       flex: 1;
       padding: 8px 10px;
-      border: 1px solid var(--input-border);
-      border-radius: 6px;
+      border: 1px solid var(--gray-300);
+      border-radius: var(--radius);
       font-family: inherit;
-      font-size: 14px;
+      font-size: 13px;
       color: var(--text);
-      background: #fff;
+      background: var(--surface);
       outline: none;
       cursor: pointer;
-      min-height: 38px;
+      min-height: 36px;
     }
 
     .printer-row select:focus {
-      border-color: var(--input-focus);
-      box-shadow: 0 0 0 3px rgba(29,78,216,0.15);
+      border-color: var(--blue-600);
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
     }
 
-    /* ── Confirm modal ── */
-    #confirm-overlay {
+    /* ── Email templates table (reuses shared table styles above) ── */
+    .email-table-wrap { /* uses fb-card */ }
+    .email-section-header { /* uses fb-card-header */ }
+
+    .col-email-num   { width: 36px; text-align: center; font-size: 13px; font-weight: 600; color: var(--gray-400); }
+    .col-email-label { width: 165px; }
+    .col-email-to    { }
+    .col-email-note  { width: 100px; text-align: right; }
+
+    /* ── Footer ── */
+    .footer {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 10px;
+      padding-top: 2px;
+      border-top: 1px solid var(--border);
+      padding-top: 12px;
+    }
+
+    .btn-cancel {
+      background: var(--surface);
+      color: var(--gray-700);
+      border-color: var(--gray-300);
+      font-weight: 500;
+    }
+    .btn-cancel:hover { background: var(--gray-100); }
+
+    .btn-save {
+      background: var(--primary);
+      color: #fff;
+      border-color: transparent;
+      padding: 0 28px;
+    }
+    .btn-save:hover { background: var(--primary-hover); }
+
+    #save-status {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-right: auto;
+    }
+    #save-status.ok  { color: var(--green-700); }
+    #save-status.err { color: var(--danger); }
+
+    /* ── Flowbite modal backdrop + box ── */
+    .fb-modal-overlay {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.35);
-      z-index: 100;
+      background: rgba(17,24,39,0.5);   /* gray-900 / 50% */
+      z-index: 200;
       align-items: center;
       justify-content: center;
+      backdrop-filter: blur(2px);
     }
-    #confirm-overlay.visible { display: flex; }
+    .fb-modal-overlay.visible { display: flex; }
 
-    #confirm-box {
-      background: #fff;
-      border-radius: 10px;
-      padding: 24px 28px;
-      width: 320px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    .fb-modal {
+      background: var(--surface);
+      border-radius: var(--radius-xl);
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      overflow: hidden;
     }
 
-    #confirm-msg {
-      font-size: 15px;
-      font-weight: 500;
+    .fb-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 24px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .fb-modal-header h3 {
+      font-size: 16px;
+      font-weight: 700;
       color: var(--text);
-      line-height: 1.45;
+      letter-spacing: -0.02em;
+    }
+
+    .fb-modal-body {
+      padding: 20px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .fb-modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 14px 24px 18px;
+      border-top: 1px solid var(--border);
+      background: var(--gray-50);
+    }
+
+    /* Note modal specifics */
+    #note-overlay { /* uses fb-modal-overlay */ }
+    #note-box { width: 440px; /* uses fb-modal */ }
+
+    #note-textarea {
+      width: 100%;
+      height: 128px;
+      padding: 10px 12px;
+      border: 1px solid var(--gray-300);
+      border-radius: var(--radius);
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--text);
+      resize: vertical;
+      outline: none;
+      line-height: 1.55;
+      background: var(--surface);
+    }
+    #note-textarea:focus {
+      border-color: var(--blue-600);
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+    }
+
+    #note-char-count {
+      font-size: 12px;
+      color: var(--gray-400);
+      text-align: right;
+    }
+
+    /* Confirm modal specifics */
+    #confirm-overlay { /* uses fb-modal-overlay */ }
+    #confirm-box { width: 360px; /* uses fb-modal */ }
+
+    #confirm-msg {
+      font-size: 14px;
+      color: var(--gray-700);
+      line-height: 1.55;
     }
 
     #confirm-actions {
@@ -282,12 +436,12 @@
 </head>
 <body>
   <div id="settings-wrap">
-    <div>
+    <div class="page-header">
       <h1>Configure Action Buttons</h1>
-      <p class="subtitle">Each button copies the open PDF into its destination folder when clicked.</p>
+      <p>Each button copies the open PDF into its destination folder when clicked.</p>
     </div>
 
-    <div class="table-wrap">
+    <div class="fb-card table-wrap">
       <table id="settings-table">
         <thead>
           <tr>
@@ -304,15 +458,40 @@
     </div>
 
     <!-- Default printer -->
-    <div class="printer-section">
-      <h2>Default Printer</h2>
-      <p class="subtitle">When set, the Print button sends directly to this printer. Leave on "Open in viewer" to use your system's PDF viewer instead.</p>
-      <div class="printer-row">
-        <select id="printer-select">
-          <option value="">— Open in PDF viewer (default) —</option>
-        </select>
-        <button class="btn-browse" id="btn-detect-printers">Detect Printers</button>
+    <div class="fb-card">
+      <div class="fb-card-header">
+        <h2>Default Printer</h2>
+        <p>When set, the Print button sends directly to this printer. Leave on "Open in viewer" to use your system's PDF viewer instead.</p>
       </div>
+      <div class="fb-card-body">
+        <div class="printer-row">
+          <select id="printer-select">
+            <option value="">— Open in PDF viewer (default) —</option>
+          </select>
+          <button class="btn-browse" id="btn-detect-printers">Detect Printers</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Email Templates -->
+    <div class="fb-card email-table-wrap">
+      <div class="fb-card-header">
+        <h2>Email Templates</h2>
+        <p>Each template pre-fills the recipient and a message note. The open PDF is attached via Outlook.</p>
+      </div>
+      <table id="email-table">
+        <thead>
+          <tr>
+            <th class="col-email-num">#</th>
+            <th class="col-email-label">Label</th>
+            <th class="col-email-to">Recipient Email</th>
+            <th class="col-email-note">Note</th>
+          </tr>
+        </thead>
+        <tbody id="email-body">
+          <!-- Populated by settings.js -->
+        </tbody>
+      </table>
     </div>
 
     <div class="footer">
@@ -323,12 +502,31 @@
   </div>
 
   <!-- Custom confirm modal (replaces native confirm()) -->
-  <div id="confirm-overlay">
-    <div id="confirm-box">
-      <p id="confirm-msg"></p>
-      <div id="confirm-actions">
+  <div id="confirm-overlay" class="fb-modal-overlay">
+    <div id="confirm-box" class="fb-modal">
+      <div class="fb-modal-body">
+        <p id="confirm-msg"></p>
+      </div>
+      <div class="fb-modal-footer" id="confirm-actions">
         <button class="btn-cancel" id="confirm-cancel">Cancel</button>
         <button class="btn-clear"  id="confirm-ok">Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Note edit modal -->
+  <div id="note-overlay" class="fb-modal-overlay">
+    <div id="note-box" class="fb-modal">
+      <div class="fb-modal-header">
+        <h3 id="note-modal-title">Edit Note</h3>
+      </div>
+      <div class="fb-modal-body">
+        <textarea id="note-textarea" placeholder="Message body for this email template…" maxlength="500"></textarea>
+        <div id="note-char-count">0 / 500</div>
+      </div>
+      <div class="fb-modal-footer" id="note-actions">
+        <button class="btn-cancel" id="note-cancel">Cancel</button>
+        <button class="btn-save"   id="note-save">Save Note</button>
       </div>
     </div>
   </div>
