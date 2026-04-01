@@ -242,6 +242,42 @@
       border-color: var(--input-focus);
       box-shadow: 0 0 0 3px rgba(29,78,216,0.15);
     }
+
+    /* ── Confirm modal ── */
+    #confirm-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    #confirm-overlay.visible { display: flex; }
+
+    #confirm-box {
+      background: #fff;
+      border-radius: 10px;
+      padding: 24px 28px;
+      width: 320px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    #confirm-msg {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text);
+      line-height: 1.45;
+    }
+
+    #confirm-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
   </style>
 </head>
 <body>
@@ -283,6 +319,17 @@
       <span id="save-status"></span>
       <button class="btn-cancel" id="btn-cancel">Cancel</button>
       <button class="btn-save"   id="btn-save">Save Settings</button>
+    </div>
+  </div>
+
+  <!-- Custom confirm modal (replaces native confirm()) -->
+  <div id="confirm-overlay">
+    <div id="confirm-box">
+      <p id="confirm-msg"></p>
+      <div id="confirm-actions">
+        <button class="btn-cancel" id="confirm-cancel">Cancel</button>
+        <button class="btn-clear"  id="confirm-ok">Clear</button>
+      </div>
     </div>
   </div>
 

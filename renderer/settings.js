@@ -3,6 +3,37 @@
 let workingButtons = [];
 let workingPrinter = '';
 
+// ── Custom confirm modal ──────────────────────────────────────────────────────
+
+function showConfirm(message) {
+  return new Promise((resolve) => {
+    const overlay  = document.getElementById('confirm-overlay');
+    const msgEl    = document.getElementById('confirm-msg');
+    const okBtn    = document.getElementById('confirm-ok');
+    const cancelBtn = document.getElementById('confirm-cancel');
+
+    msgEl.textContent = message;
+    overlay.classList.add('visible');
+
+    function finish(result) {
+      overlay.classList.remove('visible');
+      okBtn.removeEventListener('click', onOk);
+      cancelBtn.removeEventListener('click', onCancel);
+      resolve(result);
+    }
+    const onOk     = () => finish(true);
+    const onCancel = () => finish(false);
+
+    okBtn.addEventListener('click', onOk);
+    cancelBtn.addEventListener('click', onCancel);
+
+    // Dismiss on overlay click outside the box
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) finish(false);
+    }, { once: true });
+  });
+}
+
 async function init() {
   const settings = await window.electronAPI.getSettings();
   workingButtons = settings.buttons.map(b => ({ label: b.label || '', folder: b.folder || '' }));
@@ -110,9 +141,9 @@ function renderRows() {
     clearBtn.className = 'btn-clear';
     clearBtn.textContent = 'Clear';
     clearBtn.disabled = !btn.folder;
-    clearBtn.addEventListener('click', () => {
+    clearBtn.addEventListener('click', async () => {
       const label = workingButtons[i].label || `Button ${i + 1}`;
-      if (!confirm(`Clear the folder for "${label}"?`)) return;
+      if (!await showConfirm(`Clear the folder for "${label}"?`)) return;
       workingButtons[i].folder = '';
       folderDisplay.textContent = 'No folder selected';
       folderDisplay.title = '';
