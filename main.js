@@ -210,24 +210,65 @@ ipcMain.handle('printers:get', async () => {
   }
 });
 
-// Print PDF — direct to printer if one is configured, else open in OS viewer
+// Print PDF — use a hidden BrowserWindow so Chromium renders and prints the PDF
+// natively, avoiding reliance on external registered verbs (PrintTo) that break
+// once this app becomes the system default PDF handler.
 ipcMain.handle('print:pdf', async (event, { filePath, printerName }) => {
   if (!printerName) {
     await shell.openPath(filePath);
     return { success: true };
   }
-  return new Promise((resolve) => {
-    if (process.platform === 'win32') {
-      // PrintTo verb routes to the registered PDF handler's print target
-      execFile('powershell.exe', [
-        '-NoProfile', '-NonInteractive', '-Command',
-        `Start-Process -FilePath "${filePath.replace(/"/g, '\\"')}" -Verb PrintTo -ArgumentList "${printerName.replace(/"/g, '\\"')}"`,
-      ], (err) => resolve(err ? { success: false, error: err.message } : { success: true }));
-    } else {
-      // macOS / Linux: lp command
+
+  if (process.platform !== 'win32') {
+    // macOS / Linux: lp command
+    return new Promise((resolve) => {
       execFile('lp', ['-d', printerName, filePath],
         (err) => resolve(err ? { success: false, error: err.message } : { success: true }));
-    }
+    });
+  }
+
+  return new Promise((resolve) => {
+    const printWin = new BrowserWindow({
+      show: false,
+      width: 816,   // US Letter at 96dpi
+      height: 1056,
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+        sandbox: false,
+      },
+    });
+
+    const fileUrl = 'file:///' + filePath.replace(/\\/g, '/');
+    printWin.loadURL(fileUrl);
+
+    const cleanup = (result) => {
+      if (!printWin.isDestroyed()) printWin.close();
+      resolve(result);
+    };
+
+    const timer = setTimeout(
+      () => cleanup({ success: false, error: 'Print timed out after 30 s' }),
+      30000
+    );
+
+    printWin.webContents.once('did-finish-load', () => {
+      // Allow Chromium's PDF viewer time to finish rendering before printing
+      setTimeout(() => {
+        printWin.webContents.print(
+          { silent: true, deviceName: printerName, printBackground: true },
+          (success, failureReason) => {
+            clearTimeout(timer);
+            cleanup(success ? { success: true } : { success: false, error: failureReason });
+          }
+        );
+      }, 1500);
+    });
+
+    printWin.webContents.once('did-fail-load', (_, code, desc) => {
+      clearTimeout(timer);
+      cleanup({ success: false, error: `Could not load PDF for printing: ${desc}` });
+    });
   });
 });
 
@@ -306,35 +347,34 @@ ipcMain.handle('pdf:process', async (event, { src, destFolder, rotation, signatu
     }
 
     if (signature) {
-      const fontBytes = fs.readFileSync(path.join(__dirname, 'assets', 'Caveat-Regular.ttf'));
-      const caveat = await doc.embedFont(fontBytes);
+      const fontBytes = fs.readFileSync(path.join(__dirname, 'assets', 'Sacramento-Regular.ttf'));
+      const sacramento = await doc.embedFont(fontBytes);
       const helv = await doc.embedFont(StandardFonts.Helvetica);
 
       const lastPage = pages[pages.length - 1];
       const { width, height } = lastPage.getSize();
 
-      const bW = 240, bH = 88, margin = 20;
+      const bW = 250, bH = 90, margin = 20;
       const bX = width - bW - margin;
       const bY = margin;
 
       lastPage.drawRectangle({
         x: bX, y: bY, width: bW, height: bH,
         color: rgb(0.97, 0.97, 1),
-        borderColor: rgb(0.55, 0.55, 0.7),
-        borderWidth: 0.6,
-        opacity: 0.95,
+        borderColor: rgb(0.4, 0.4, 0.65),
+        borderWidth: 1,
       });
 
       lastPage.drawText(signature.name, {
-        x: bX + 10, y: bY + bH - 32,
-        font: caveat, size: 22,
+        x: bX + 10, y: bY + bH - 34,
+        font: sacramento, size: 26,
         color: rgb(0.08, 0.1, 0.45),
       });
 
       lastPage.drawLine({
-        start: { x: bX + 10, y: bY + bH - 38 },
-        end:   { x: bX + bW - 10, y: bY + bH - 38 },
-        thickness: 0.4, color: rgb(0.7, 0.7, 0.8),
+        start: { x: bX + 10, y: bY + bH - 40 },
+        end:   { x: bX + bW - 10, y: bY + bH - 40 },
+        thickness: 0.5, color: rgb(0.6, 0.6, 0.75),
       });
 
       [
@@ -343,9 +383,9 @@ ipcMain.handle('pdf:process', async (event, { src, destFolder, rotation, signatu
         `Device:  ${signature.device}`,
       ].forEach((line, i) => {
         lastPage.drawText(line, {
-          x: bX + 10, y: bY + bH - 52 - i * 13,
+          x: bX + 10, y: bY + bH - 54 - i * 13,
           font: helv, size: 8,
-          color: rgb(0.35, 0.35, 0.45),
+          color: rgb(0.3, 0.3, 0.4),
         });
       });
     }
